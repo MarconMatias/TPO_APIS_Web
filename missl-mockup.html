@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MISSL Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: tienda monocromática, contenido de 1184px centrado, bandas a todo el ancho, grillas de producto 4 → 2 columnas */
+  :root {
+    --bg: #ffffff;
+    --fg: #0b0b0b;
+    --muted: #4a4a4a;
+    --soft: #8a8a8a;
+    --line: #e6e6e6;
+    --line-strong: #dcdcdc;
+    --surface: #f4f4f4;
+    --surface-2: #ebebeb;
+    --inv-bg: #0b0b0b;
+    --inv-fg: #ffffff;
+    --inv-soft: #9a9a9a;
+    --ok: #1f7a3d;
+    --danger: #b42318;
+    --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --font-body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --gutter: clamp(16px, 3vw, 28px);
+    --content: 1184px;
+    --band-left: max(var(--gutter), env(safe-area-inset-left, 0px), calc((100% - var(--content)) / 2));
+    --band-right: max(var(--gutter), env(safe-area-inset-right, 0px), calc((100% - var(--content)) / 2));
+    color-scheme: light;
+  }
+
+  /* Reset: los navegadores le ponen márgenes y viñetas propios a estas etiquetas */
+  *, *::before, *::after { box-sizing: border-box; }
+  /* hidden tiene que ganarle a cualquier display (flex, grid) que pongan las clases */
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 50; background: var(--bg); }
+  h1, h2, h3, p, figure, ul, ol, menu, dl, dd, fieldset, legend, address { margin: 0; padding: 0; }
+  ul, ol, menu { list-style: none; }
+  fieldset { border: 0; min-width: 0; }
+  address { font-style: normal; }
+  a { color: inherit; text-decoration: none; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  ::selection { background: var(--fg); color: var(--bg); }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* .band: cualquier bloque a todo el ancho con el contenido centrado (reemplaza al div contenedor) */
+  .band { padding-left: var(--band-left); padding-right: var(--band-right); }
+  .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--soft); font-weight: 600; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Botones */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 15px 28px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); transition: opacity 160ms; }
+  .btn:hover { opacity: 0.82; }
+  .btn.ghost { background: transparent; color: var(--fg); }
+  .btn.ghost:hover { background: var(--surface); opacity: 1; }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: 0.6; cursor: progress; }
+  .btn.danger { background: var(--danger); border-color: var(--danger); color: var(--inv-fg); }
+
+  /* Barra de anuncio + header */
+  .announce { background: var(--inv-bg); color: var(--inv-fg); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; text-align: center; font-weight: 500; padding-block: 9px; }
+  .site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); height: 70px; display: flex; align-items: center; gap: clamp(14px, 2.4vw, 40px); }
+  .logo { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: 0.06em; flex-shrink: 0; }
+  .main-nav { overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1; }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .main-nav ul, .account-nav ul { display: flex; gap: clamp(14px, 2vw, 28px); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; }
+  .main-nav a { display: block; padding: 6px 0; white-space: nowrap; border-bottom: 1px solid transparent; }
+  .main-nav a:hover, .main-nav a[aria-current="true"], .account-nav a[aria-current="true"] { border-bottom-color: var(--fg); }
+  .account-nav a { border-bottom: 1px solid transparent; padding: 6px 0; white-space: nowrap; }
+  .account-nav { flex-shrink: 0; }
+  .account-nav ul { gap: 18px; align-items: center; letter-spacing: 0.12em; }
+  .cart-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; background: var(--fg); color: var(--bg); font-size: 11px; margin-left: 4px; }
+
+  /* Placeholder de imagen: <figure> con <figcaption>; en la app real va un <img> adentro */
+  .ph { position: relative; background: var(--surface); background-image: repeating-linear-gradient(135deg, transparent 0 14px, var(--surface-2) 14px 15px); display: grid; place-items: center; overflow: hidden; max-width: 100%; }
+  .ph figcaption { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft); font-weight: 600; padding: 0 12px; text-align: center; }
+
+  /* Home: hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); grid-template-rows: 1fr auto; column-gap: clamp(28px, 5vw, 64px); row-gap: 26px; padding-left: var(--band-left); border-bottom: 1px solid var(--line); }
+  .hero hgroup { align-self: end; display: flex; flex-direction: column; gap: 24px; max-width: 620px; padding-top: clamp(48px, 8vw, 88px); }
+  .hero h1 { font-weight: 800; font-size: clamp(40px, 6vw, 68px); line-height: 0.95; letter-spacing: -0.03em; }
+  .hero hgroup p:last-child { font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 46ch; }
+  .hero .row-btns { align-self: start; padding-bottom: clamp(48px, 8vw, 88px); }
+  .hero .ph { grid-column: 2; grid-row: 1 / 3; min-height: 440px; }
+  .row-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* Secciones con título */
+  .sec { padding-block: clamp(44px, 6vw, 72px) 8px; }
+  .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--fg); padding-bottom: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+  .sec-head h2 { font-weight: 700; font-size: clamp(24px, 3vw, 30px); letter-spacing: -0.02em; }
+  .sec-head a { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--fg); padding-bottom: 2px; }
+
+  /* Grilla y tarjeta de producto: <ul> > <li> > <article> */
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 22px; }
+  .card > a { display: flex; flex-direction: column; gap: 5px; transition: opacity 160ms; }
+  .card > a:hover { opacity: 0.8; }
+  .card .ph { aspect-ratio: 1 / 1.15; margin-bottom: 9px; }
+  .badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .badge { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 8px; font-weight: 600; border: 1px solid var(--fg); background: var(--bg); color: var(--fg); }
+  .badge.solid { background: var(--fg); color: var(--bg); }
+  .card hgroup { display: flex; flex-direction: column; gap: 4px; }
+  .card .brand { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--soft); font-weight: 600; }
+  .card h3 { font-family: var(--font-body); font-size: 15px; font-weight: 500; }
+  .prices { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .prices data { font-weight: 600; }
+  .prices s { font-size: 13px; color: var(--soft); }
+  .card .meta { font-size: 12px; color: var(--soft); }
+
+  /* Banner de promoción */
+  .promo { background: var(--inv-bg); color: var(--inv-fg); margin-top: 48px; padding-block: 32px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .promo hgroup { margin-right: auto; display: flex; flex-direction: column; gap: 6px; }
+  .promo .eyebrow { color: var(--inv-soft); }
+  .promo h2 { font-size: clamp(20px, 2.6vw, 26px); font-weight: 700; }
+  .promo .timer-box { display: flex; flex-direction: column; }
+  .promo time { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: 0.02em; }
+  .promo .btn { background: var(--inv-fg); color: var(--inv-bg); border-color: var(--inv-fg); }
+
+  /* Categorías */
+  .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+  .cats a { display: flex; flex-direction: column; gap: 12px; }
+  .cats .ph { aspect-ratio: 4 / 3; }
+  .cats h3 { font-size: 20px; font-weight: 700; display: flex; justify-content: space-between; }
+
+  /* Catálogo */
+  .page-head { padding-block: 44px 28px; border-bottom: 1px solid var(--line); }
+  .page-head h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -0.03em; margin-top: 10px; }
+  .page-head p:last-child:not(.eyebrow) { color: var(--muted); max-width: 60ch; margin-top: 12px; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 22px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line-strong); background: var(--bg); padding: 9px 15px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+  .chip:hover { border-color: var(--fg); }
+  .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .sort { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--soft); }
+  select { border: 1px solid var(--line-strong); background: var(--bg); padding: 9px 12px; font-size: 13px; }
+
+  /* Producto */
+  .crumb ol { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--soft); font-weight: 600; padding-block: 24px; }
+  .crumb li + li::before { content: "·"; margin-right: 8px; }
+  .crumb a:hover { color: var(--fg); }
+  .pdp { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .gallery { display: grid; gap: 10px; }
+  .gallery > .ph { aspect-ratio: 1 / 1.1; }
+  .thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .thumbs .ph { aspect-ratio: 1; }
+  .pinfo { display: flex; flex-direction: column; gap: 22px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 96px); }
+  .pinfo > header { display: flex; flex-direction: column; gap: 10px; }
+  .pinfo hgroup { display: flex; flex-direction: column; gap: 10px; }
+  .pinfo h1 { font-size: clamp(30px, 4vw, 42px); font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .pinfo .prices data { font-size: 24px; }
+  .delivery { display: flex; gap: 10px; align-items: center; font-size: 13px; padding: 12px 14px; border: 1px solid var(--line); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); flex-shrink: 0; }
+  .dot.ok { background: var(--ok); }
+  .buy { display: flex; flex-direction: column; gap: 22px; }
+  .buy fieldset { display: flex; flex-direction: column; gap: 12px; }
+  .label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; width: 100%; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+  .label-row output { color: var(--soft); text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .sizes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .size { min-width: 58px; border: 1px solid var(--line-strong); background: var(--bg); padding: 13px 10px; font-weight: 500; }
+  .size:hover { border-color: var(--fg); }
+  .size[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .buy-btns { display: grid; gap: 10px; }
+  .desc { color: var(--muted); line-height: 1.65; border-top: 1px solid var(--line); padding-top: 20px; max-width: 60ch; }
+  .size-guide summary { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; padding-block: 6px; }
+  .table-scroll { overflow-x: auto; margin-top: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft); font-weight: 600; border-bottom-color: var(--fg); }
+
+  /* Carrito */
+  .cart-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: start; padding-block: 32px 72px; }
+  .line { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; grid-template-areas: "img info price" "img qty price"; gap: 4px 18px; padding-block: 20px; border-bottom: 1px solid var(--line); align-items: start; }
+  .line .ph { grid-area: img; aspect-ratio: 1 / 1.15; }
+  .line hgroup { grid-area: info; display: flex; flex-direction: column; gap: 4px; }
+  .line h3 { font-family: var(--font-body); font-size: 15px; font-weight: 500; }
+  .line .sub { font-size: 13px; color: var(--soft); }
+  .qty { grid-area: qty; display: inline-flex; border: 1px solid var(--line-strong); margin-top: 10px; width: max-content; }
+  .qty button { width: 34px; height: 34px; border: 0; background: none; }
+  .qty button:hover { background: var(--surface); }
+  .qty output { width: 34px; display: grid; place-items: center; font-weight: 600; }
+  .line-price { grid-area: price; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .line-price data { font-weight: 600; }
+  .link-btn { border: 0; background: none; padding: 0; font-size: 12px; color: var(--soft); text-decoration: underline; text-underline-offset: 3px; }
+  .link-btn:hover { color: var(--fg); }
+  .summary { border: 1px solid var(--fg); padding: 26px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 96px); }
+  .summary h2 { font-size: 20px; font-weight: 700; }
+  .totals { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; font-size: 14px; }
+  .totals dd { text-align: right; }
+  .totals .total { border-top: 1px solid var(--line); padding-top: 14px; font-size: 18px; font-weight: 700; }
+  .note { font-size: 12px; color: var(--soft); line-height: 1.55; }
+  .empty { padding-block: 72px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .empty h2 { font-size: 28px; font-weight: 700; }
+
+  /* Registro / ingreso */
+  .auth { max-width: 460px; margin-inline: auto; padding-block: 56px 80px; display: flex; flex-direction: column; gap: 22px; }
+  .auth h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tab { border: 0; background: none; padding: 14px 18px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--soft); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+  .auth form { display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 7px; }
+  .field label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+  .field input, .field select, .field textarea { border: 1px solid var(--line-strong); background: var(--bg); padding: 13px 14px; font-size: 15px; width: 100%; }
+  .field textarea { resize: vertical; font: inherit; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--fg); outline: none; }
+  .check { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--fg); }
+  .form-error { color: var(--danger); font-size: 13px; }
+
+  /* Checkout */
+  .steps { display: flex; gap: 8px 22px; flex-wrap: wrap; margin-top: 20px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--soft); counter-reset: step; }
+  .steps li { counter-increment: step; }
+  .steps li::before { content: counter(step) ". "; }
+  .steps li[aria-current="step"] { color: var(--fg); }
+  .checkout { display: flex; flex-direction: column; gap: 32px; }
+  .checkout fieldset { display: flex; flex-direction: column; gap: 14px; }
+  .checkout legend { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+  .pay-opt { display: flex; gap: 14px; align-items: flex-start; border: 1px solid var(--line-strong); padding: 16px 18px; cursor: pointer; }
+  .pay-opt:has(input:checked) { border-color: var(--fg); background: var(--surface); }
+  .pay-opt input { margin-top: 4px; accent-color: var(--fg); }
+  .pay-opt span { display: flex; flex-direction: column; gap: 2px; }
+  .pay-opt small { color: var(--muted); font-size: 13px; }
+  .mini { display: flex; flex-direction: column; gap: 8px; font-size: 13px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  .mini li { display: flex; justify-content: space-between; gap: 12px; }
+
+  /* Administración de productos */
+  .admin { padding-block: 24px 72px; display: flex; flex-direction: column; gap: 16px; }
+  .admin-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--soft); }
+  .admin-table th, .admin-table td { vertical-align: middle; }
+  .admin-table th[scope="row"] { font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--fg); font-weight: 500; border-bottom-color: var(--line); }
+  .admin-table th small, .admin-table td small { display: block; color: var(--soft); font-size: 12px; font-weight: 400; }
+  .row-actions { text-align: right; }
+  .row-actions button + button { margin-left: 6px; }
+  .mini-btn { border: 1px solid var(--line-strong); background: var(--bg); padding: 7px 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .mini-btn:hover { border-color: var(--fg); }
+  .mini-btn.danger { color: var(--danger); }
+  .mini-btn.danger:hover { border-color: var(--danger); }
+  .dlg { border: 1px solid var(--fg); padding: 0; width: min(520px, calc(100% - 32px)); max-height: calc(100% - 32px); background: var(--bg); color: var(--fg); }
+  .dlg::backdrop { background: rgb(11 11 11 / 0.45); }
+  .dlg form { padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+  .dlg h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .dlg p:not(.field):not(.check):not(.form-error) { color: var(--muted); }
+  .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 8px; }
+
+  /* Nosotros */
+  .about-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .about-text { display: flex; flex-direction: column; gap: 16px; font-size: 17px; line-height: 1.65; color: var(--muted); max-width: 62ch; }
+  .facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 24px; border-top: 1px solid var(--fg); padding-top: 18px; font-size: 14px; }
+  .facts dt { color: var(--soft); }
+  .facts dd { font-weight: 600; }
+  .team-intro { color: var(--muted); margin-bottom: 24px; }
+  .team { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; padding-bottom: 24px; }
+  .member { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--fg); padding-top: 18px; }
+  .avatar { width: 72px; aspect-ratio: 1; display: grid; place-items: center; background: var(--inv-bg); color: var(--inv-fg); font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: 0.04em; }
+  .member h3 { font-size: 20px; font-weight: 700; }
+  .member p:last-child { font-size: 13px; color: var(--soft); }
+  .perk { background: var(--surface); padding: 14px 16px; font-size: 13px; }
+
+  /* Confirmación */
+  .confirm { padding-block: 72px 96px; display: flex; flex-direction: column; gap: 22px; }
+  .confirm > * { max-width: 620px; }
+  .confirm h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; letter-spacing: -0.03em; margin-top: 8px; }
+  .confirm > p { color: var(--muted); }
+  .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 24px; border-top: 1px solid var(--fg); padding-top: 18px; font-size: 14px; }
+  .kv dt { color: var(--soft); }
+  .kv dd { font-weight: 600; }
+
+  /* Footer */
+  .site-footer { margin-top: 72px; border-top: 1px solid var(--line); padding-block: 48px 0; display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 32px; }
+  .site-footer h3 { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--soft); font-weight: 600; margin-bottom: 12px; }
+  .site-footer ul, .site-footer address { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+  .site-footer section > p { margin-top: 8px; color: var(--muted); font-size: 14px; max-width: 34ch; }
+  .site-footer details { font-size: 14px; border-bottom: 1px solid var(--line); padding-block: 6px; }
+  .site-footer summary { cursor: pointer; }
+  .site-footer details p { color: var(--muted); padding-block: 8px 4px; }
+  .legal { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-block: 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--soft); }
+
+  /* Aviso flotante */
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--inv-bg); color: var(--inv-fg); padding: 14px 22px; font-size: 13px; z-index: 60; max-width: calc(100% - 32px); animation: fade 200ms ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+    .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; padding-right: var(--band-right); }
+    .hero .row-btns { padding-bottom: 8px; }
+    .hero .ph { grid-column: 1; grid-row: auto; min-height: 300px; margin-bottom: 32px; }
+    .pdp, .cart-layout, .about-grid { grid-template-columns: minmax(0, 1fr); }
+    .team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pinfo, .summary { position: static; }
+    .site-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    .cats { grid-template-columns: minmax(0, 1fr); }
+    .site-header { flex-wrap: wrap; height: auto; padding-block: 12px; row-gap: 10px; }
+    .main-nav { order: 3; flex-basis: 100%; }
+    .account-nav { margin-left: auto; }
+    .line { grid-template-columns: 72px minmax(0, 1fr); grid-template-areas: "img info" "img qty" "img price"; }
+    .line-price { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .site-footer { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<p class="announce band">Modelos por encargo · Entrega en 3 semanas · Envíos a todo el país</p>
+
+<header class="site-header band">
+  <a href="#" class="logo" data-go="home">MISSL</a>
+  <nav class="main-nav" aria-label="Categorías">
+    <ul>
+      <li><a href="#" data-go="catalog" data-cat="zapatillas">Zapatillas</a></li>
+      <li><a href="#" data-go="catalog" data-cat="indumentaria">Indumentaria</a></li>
+      <li><a href="#" data-go="catalog" data-cat="carteras">Carteras</a></li>
+      <li><a href="#" data-go="stock">Entrega inmediata</a></li>
+      <li><a href="#" data-go="about">Nosotros</a></li>
+    </ul>
+  </nav>
+  <nav class="account-nav" aria-label="Cuenta y carrito">
+    <ul>
+      <li><a href="#" data-go="admin">Admin</a></li>
+      <li><a href="#" data-go="auth" id="account-link">Ingresar</a></li>
+      <li><a href="#" data-go="cart">Carrito<output class="cart-count num" id="cart-count">0</output></a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section data-view="home" aria-label="Inicio">
+    <header class="hero">
+      <hgroup>
+        <p class="eyebrow">Temporada 26 · Selección MISSL</p>
+        <h1>Las piezas que buscás, traídas para vos.</h1>
+        <p>Zapatillas, indumentaria y carteras originales por encargo, con entrega en tres semanas. También tenemos stock disponible para entrega inmediata.</p>
+      </hgroup>
+      <p class="row-btns">
+        <a href="#" class="btn" data-go="catalog">Ver catálogo</a>
+        <a href="#" class="btn ghost" data-go="stock">Entrega inmediata</a>
+      </p>
+      <figure class="ph"><figcaption>Foto editorial de portada</figcaption></figure>
+    </header>
+
+    <section class="band sec" aria-labelledby="h-trending">
+      <header class="sec-head">
+        <h2 id="h-trending">En tendencia</h2>
+        <a href="#" data-go="catalog">Ver todo</a>
+      </header>
+      <ul class="grid" id="trending-grid"></ul>
+    </section>
+
+    <aside class="promo band" id="promo-band" aria-label="Promoción activa">
+      <hgroup>
+        <p class="eyebrow">Promoción activa</p>
+        <h2 id="promo-title"></h2>
+      </hgroup>
+      <p class="timer-box">
+        <span class="eyebrow">Termina en</span>
+        <time class="num" id="promo-timer">--:--:--</time>
+      </p>
+      <a href="#" class="btn" id="promo-cta">Ver producto</a>
+    </aside>
+
+    <section class="band sec" aria-labelledby="h-stock">
+      <header class="sec-head">
+        <h2 id="h-stock">Entrega inmediata</h2>
+        <a href="#" data-go="stock">Ver stock</a>
+      </header>
+      <ul class="grid" id="stock-grid"></ul>
+    </section>
+
+    <section class="band sec" aria-labelledby="h-cats">
+      <header class="sec-head"><h2 id="h-cats">Categorías</h2></header>
+      <ul class="cats">
+        <li><a href="#" data-go="catalog" data-cat="zapatillas"><figure class="ph"><figcaption>Zapatillas</figcaption></figure><h3>Zapatillas <span aria-hidden="true">→</span></h3></a></li>
+        <li><a href="#" data-go="catalog" data-cat="indumentaria"><figure class="ph"><figcaption>Indumentaria</figcaption></figure><h3>Indumentaria <span aria-hidden="true">→</span></h3></a></li>
+        <li><a href="#" data-go="catalog" data-cat="carteras"><figure class="ph"><figcaption>Carteras</figcaption></figure><h3>Carteras <span aria-hidden="true">→</span></h3></a></li>
+      </ul>
+    </section>
+  </section>
+
+  <!-- CATÁLOGO / STOCK -->
+  <section data-view="catalog" aria-labelledby="cat-title" hidden>
+    <header class="page-head band">
+      <hgroup>
+        <p class="eyebrow" id="cat-crumb">MISSL · Catálogo</p>
+        <h1 id="cat-title">Todo el catálogo</h1>
+        <p id="cat-sub"></p>
+      </hgroup>
+    </header>
+    <form class="toolbar band" id="filters" role="search" aria-label="Filtrar productos">
+      <fieldset class="chips" id="brand-chips">
+        <legend class="sr-only">Marca</legend>
+      </fieldset>
+      <p class="sort">
+        <output id="result-count" class="num"></output>
+        <label for="sort-select" class="eyebrow">Ordenar</label>
+        <select id="sort-select">
+          <option value="destacados">Destacados</option>
+          <option value="menor">Menor precio</option>
+          <option value="mayor">Mayor precio</option>
+          <option value="nombre">Nombre A–Z</option>
+        </select>
+      </p>
+    </form>
+    <ul class="grid band" id="catalog-grid"></ul>
+  </section>
+
+  <!-- PRODUCTO -->
+  <section data-view="product" aria-labelledby="pdp-name" hidden>
+    <nav class="crumb band" aria-label="Ruta de navegación"><ol id="pdp-crumb"></ol></nav>
+    <article class="pdp band">
+      <section class="gallery" aria-label="Fotos del producto">
+        <figure class="ph" id="pdp-main"><figcaption>Foto principal</figcaption></figure>
+        <ul class="thumbs">
+          <li><figure class="ph"><figcaption>Detalle</figcaption></figure></li>
+          <li><figure class="ph"><figcaption>Perfil</figcaption></figure></li>
+          <li><figure class="ph"><figcaption>Caja</figcaption></figure></li>
+        </ul>
+      </section>
+      <section class="pinfo" aria-label="Detalle del producto">
+        <header>
+          <hgroup>
+            <p class="eyebrow" id="pdp-brand"></p>
+            <h1 id="pdp-name"></h1>
+          </hgroup>
+          <p class="prices num" id="pdp-prices"></p>
+        </header>
+        <p class="delivery" id="pdp-delivery"></p>
+        <form class="buy" id="buy-form">
+          <fieldset>
+            <legend class="label-row"><span>Talle</span><output id="size-hint">Elegí un talle para continuar</output></legend>
+            <p class="sizes" id="pdp-sizes"></p>
+          </fieldset>
+          <p class="buy-btns">
+            <button type="button" class="btn block" data-act="add">Agregar al carrito</button>
+            <button type="button" class="btn ghost block" data-act="buy">Comprar ahora</button>
+          </p>
+        </form>
+        <p class="desc" id="pdp-desc"></p>
+        <details class="size-guide" open>
+          <summary>Guía de talles</summary>
+          <figure class="table-scroll"><table class="num" id="size-table"></table></figure>
+        </details>
+      </section>
+    </article>
+    <section class="band sec" aria-labelledby="h-related">
+      <header class="sec-head"><h2 id="h-related">También te puede gustar</h2></header>
+      <ul class="grid" id="related-grid"></ul>
+    </section>
+  </section>
+
+  <!-- CARRITO -->
+  <section data-view="cart" aria-labelledby="h-cart" hidden>
+    <header class="page-head band">
+      <hgroup>
+        <p class="eyebrow">MISSL · Tu compra</p>
+        <h1 id="h-cart">Carrito</h1>
+      </hgroup>
+    </header>
+    <section class="band" id="cart-root" aria-label="Productos en el carrito"></section>
+  </section>
+
+  <!-- REGISTRO / INGRESO -->
+  <section data-view="auth" class="auth band" aria-labelledby="auth-title" hidden>
+    <hgroup>
+      <p class="eyebrow">Cuenta MISSL</p>
+      <h1 id="auth-title">Creá tu cuenta</h1>
+    </hgroup>
+    <menu class="tabs">
+      <li><button type="button" class="tab" data-tab="register" aria-pressed="true">Registrarme</button></li>
+      <li><button type="button" class="tab" data-tab="login" aria-pressed="false">Ingresar</button></li>
+    </menu>
+    <p class="perk" id="auth-perk">Al registrarte se aplica un <strong>5% de descuento</strong> en tu primera compra.</p>
+    <form id="auth-form" novalidate>
+      <p class="field" id="field-name"><label for="f-name">Nombre y apellido</label><input id="f-name" autocomplete="name" placeholder="Camila Duarte"></p>
+      <p class="field"><label for="f-email">Email</label><input id="f-email" type="email" autocomplete="email" placeholder="camila.duarte@gmail.com"></p>
+      <p class="field"><label for="f-pass">Contraseña</label><input id="f-pass" type="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres"></p>
+      <button class="btn block" type="submit" id="auth-cta">Registrarme y obtener 5%</button>
+    </form>
+  </section>
+
+  <!-- CONFIRMACIÓN -->
+  <section data-view="confirm" class="confirm band" aria-labelledby="h-confirm" hidden>
+    <hgroup>
+      <p class="eyebrow">Pago acreditado</p>
+      <h1 id="h-confirm">Gracias por tu compra.</h1>
+    </hgroup>
+    <p>Te enviamos el comprobante por email. Podés seguir el estado del pedido desde tu cuenta.</p>
+    <dl class="kv num" id="confirm-kv"></dl>
+    <p class="row-btns"><a href="#" class="btn" data-go="home">Volver al inicio</a></p>
+  </section>
+
+  <!-- CHECKOUT: simulación de envío y pago -->
+  <section data-view="checkout" aria-labelledby="h-checkout" hidden>
+    <header class="page-head band">
+      <hgroup>
+        <p class="eyebrow">MISSL · Tu compra</p>
+        <h1 id="h-checkout">Envío y pago</h1>
+      </hgroup>
+      <ol class="steps" aria-label="Pasos de la compra">
+        <li>Carrito</li>
+        <li aria-current="step">Envío y pago</li>
+        <li>Confirmación</li>
+      </ol>
+    </header>
+    <section class="band cart-layout" aria-label="Datos de la compra">
+      <form class="checkout" id="checkout-form" novalidate>
+        <fieldset>
+          <legend>Datos de envío</legend>
+          <p class="field"><label for="c-address">Dirección</label><input id="c-address" autocomplete="street-address" placeholder="Av. Corrientes 1234, 5° B"></p>
+          <p class="field"><label for="c-city">Localidad y provincia</label><input id="c-city" autocomplete="address-level2" placeholder="CABA, Buenos Aires"></p>
+          <p class="field"><label for="c-phone">Teléfono</label><input id="c-phone" type="tel" autocomplete="tel" placeholder="11 5555-1234"></p>
+        </fieldset>
+        <fieldset>
+          <legend>Medio de pago</legend>
+          <label class="pay-opt"><input type="radio" name="pay" value="Mercado Pago" checked><span><strong>Mercado Pago</strong><small>Dinero en cuenta o débito vinculado</small></span></label>
+          <label class="pay-opt"><input type="radio" name="pay" value="Tarjeta de débito"><span><strong>Tarjeta de débito</strong><small>Procesado por la API de pagos, sin cuotas</small></span></label>
+          <label class="pay-opt"><input type="radio" name="pay" value="Transferencia bancaria"><span><strong>Transferencia bancaria</strong><small>CBU enviado por email, acredita en 24 h</small></span></label>
+          <p class="note">No operamos con tarjetas de crédito ni cuotas.</p>
+        </fieldset>
+        <button type="submit" class="btn block" id="pay-btn">Confirmar pago</button>
+      </form>
+      <aside class="summary" id="checkout-summary" aria-label="Resumen del pedido"></aside>
+    </section>
+  </section>
+
+  <!-- ADMINISTRACIÓN: listado con detalle, modificación y borrado -->
+  <section data-view="admin" aria-labelledby="h-admin" hidden>
+    <header class="page-head band">
+      <hgroup>
+        <p class="eyebrow">MISSL · Administración</p>
+        <h1 id="h-admin">Productos</h1>
+        <p>Consultá el detalle, modificá o eliminá los productos publicados en el catálogo.</p>
+      </hgroup>
+    </header>
+    <section class="band admin" aria-label="Listado de productos">
+      <p class="admin-bar">
+        <output id="admin-count" class="num"></output>
+        <button type="button" class="btn" data-act="new">Nuevo producto</button>
+      </p>
+      <figure class="table-scroll">
+        <table class="admin-table num">
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col">Categoría</th>
+              <th scope="col">Precio</th>
+              <th scope="col">Disponibilidad</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody id="admin-rows"></tbody>
+        </table>
+      </figure>
+    </section>
+  </section>
+
+  <!-- NOSOTROS: compañía e integrantes -->
+  <section data-view="about" aria-labelledby="h-about" hidden>
+    <header class="page-head band">
+      <hgroup>
+        <p class="eyebrow">MISSL · Nosotros</p>
+        <h1 id="h-about">Quiénes somos</h1>
+        <p>Zapatillas, indumentaria y carteras originales, traídas por encargo o listas para entrega inmediata.</p>
+      </hgroup>
+    </header>
+    <section class="band sec" aria-labelledby="h-company">
+      <header class="sec-head"><h2 id="h-company">La compañía</h2></header>
+      <article class="about-grid">
+        <section class="about-text" aria-label="Descripción">
+          <p>MISSL es un e-commerce argentino de zapatillas, indumentaria y carteras originales. Trabajamos con modelos por encargo: elegís el producto y el talle, confirmás el pago y lo recibís en tres semanas.</p>
+          <p>Además mantenemos una selección con stock físico en Buenos Aires para entrega inmediata, que despachamos dentro de las 24 a 72 horas de acreditado el pago.</p>
+          <p>Vendemos con Mercado Pago, débito y transferencia bancaria, sin tarjetas de crédito ni cuotas. Quienes se registran obtienen un 5% de descuento en su primera compra.</p>
+        </section>
+        <dl class="facts">
+          <dt>Categorías</dt><dd>Zapatillas, indumentaria y carteras</dd>
+          <dt>Por encargo</dt><dd>Entrega en 3 semanas</dd>
+          <dt>Con stock</dt><dd>Entrega en 24 a 72 h</dd>
+          <dt>Medios de pago</dt><dd>Mercado Pago, débito y transferencia</dd>
+          <dt>Base</dt><dd>Buenos Aires, Argentina</dd>
+        </dl>
+      </article>
+    </section>
+    <section class="band sec" aria-labelledby="h-team">
+      <header class="sec-head"><h2 id="h-team">Integrantes del grupo</h2></header>
+      <p class="team-intro">Este sitio fue diseñado y desarrollado por:</p>
+      <ul class="team">
+        <li><article class="member"><p class="avatar" aria-hidden="true">MM</p><h3>Matias Marcon</h3><p>Integrante del equipo</p></article></li>
+        <li><article class="member"><p class="avatar" aria-hidden="true">LM</p><h3>Lucas Mendoza</h3><p>Integrante del equipo</p></article></li>
+        <li><article class="member"><p class="avatar" aria-hidden="true">NF</p><h3>Nahuel Frechero</h3><p>Integrante del equipo</p></article></li>
+        <li><article class="member"><p class="avatar" aria-hidden="true">LR</p><h3>Lisandro Ramos</h3><p>Integrante del equipo</p></article></li>
+      </ul>
+    </section>
+  </section>
+</main>
+
+<footer class="site-footer band">
+  <section aria-label="Sobre MISSL">
+    <h2 class="logo">MISSL</h2>
+    <p>Zapatillas, indumentaria y carteras originales por encargo. Buenos Aires, Argentina.</p>
+  </section>
+  <nav aria-labelledby="ft-shop">
+    <h3 id="ft-shop">Tienda</h3>
+    <ul>
+      <li><a href="#" data-go="catalog" data-cat="zapatillas">Zapatillas</a></li>
+      <li><a href="#" data-go="catalog" data-cat="indumentaria">Indumentaria</a></li>
+      <li><a href="#" data-go="catalog" data-cat="carteras">Carteras</a></li>
+      <li><a href="#" data-go="about">Nosotros</a></li>
+      <li><a href="#" data-go="admin">Administración</a></li>
+    </ul>
+  </nav>
+  <section aria-labelledby="ft-help">
+    <h3 id="ft-help">Preguntas frecuentes</h3>
+    <details>
+      <summary>¿Cómo funciona el encargo?</summary>
+      <p>Confirmás el pago, pedimos el par al proveedor y lo recibís en 3 semanas.</p>
+    </details>
+    <details>
+      <summary>¿Cómo mido mi pie?</summary>
+      <p>Apoyá el talón contra la pared sobre una hoja, marcá la punta y medí en cm.</p>
+    </details>
+    <details>
+      <summary>¿Qué medios de pago aceptan?</summary>
+      <p>Mercado Pago, débito y transferencia. No trabajamos con crédito ni cuotas.</p>
+    </details>
+  </section>
+  <section aria-labelledby="ft-contact">
+    <h3 id="ft-contact">Contacto</h3>
+    <address>
+      <span>hola@missl.com.ar</span>
+      <span>@missl.store</span>
+      <span>Buenos Aires, Argentina</span>
+    </address>
+  </section>
+  <p class="legal"><small>© 2026 MISSL</small><small>Mockup de referencia · datos de ejemplo</small></p>
+</footer>
+
+<dialog class="dlg" id="edit-dialog" aria-labelledby="edit-title">
+  <form id="edit-form" novalidate>
+    <h2 id="edit-title">Modificar producto</h2>
+    <p class="field"><label for="e-name">Nombre</label><input id="e-name"></p>
+    <p class="field"><label for="e-brand">Marca</label><input id="e-brand"></p>
+    <p class="field"><label for="e-cat">Categoría</label>
+      <select id="e-cat">
+        <option value="zapatillas">Zapatillas</option>
+        <option value="indumentaria">Indumentaria</option>
+        <option value="carteras">Carteras</option>
+      </select>
+    </p>
+    <p class="field"><label for="e-price">Precio de lista (ARS)</label><input id="e-price" type="number" min="0" step="100" inputmode="numeric"></p>
+    <p class="field"><label for="e-promo">Descuento (%)</label><input id="e-promo" type="number" min="0" max="90" inputmode="numeric"></p>
+    <p class="check"><input type="checkbox" id="e-stock"><label for="e-stock">Stock disponible para entrega inmediata</label></p>
+    <p class="field"><label for="e-desc">Descripción</label><textarea id="e-desc" rows="3"></textarea></p>
+    <p class="form-error" id="edit-error" role="alert" hidden></p>
+    <menu class="dlg-actions">
+      <li><button type="button" class="btn ghost" data-act="close-dialog">Cancelar</button></li>
+      <li><button type="submit" class="btn" id="edit-save">Guardar cambios</button></li>
+    </menu>
+  </form>
+</dialog>
+
+<dialog class="dlg" id="del-dialog" aria-labelledby="del-title">
+  <form method="dialog">
+    <h2 id="del-title">¿Eliminar producto?</h2>
+    <p id="del-text"></p>
+    <menu class="dlg-actions">
+      <li><button class="btn ghost" value="cancel">Cancelar</button></li>
+      <li><button class="btn danger" value="delete">Eliminar</button></li>
+    </menu>
+  </form>
+</dialog>
+
+<p class="toast" id="toast" role="status" hidden></p>
+
+<script>
+  const CATS = { zapatillas: 'Zapatillas', indumentaria: 'Indumentaria', carteras: 'Carteras' };
+  const SIZES = { zapatillas: ['38', '39', '40', '41', '42', '43'], indumentaria: ['S', 'M', 'L', 'XL'], carteras: ['Único'] };
+  const DISCOUNT = 5;
+
+  // Datos de ejemplo (en la app real vienen de missl-api)
+  const PRODUCTS = [
+    { id: 'zk1', name: 'Gel-Kayano 14', brand: 'Asics', cat: 'zapatillas', price: 289900, stock: true, trending: true, promo: 15, desc: 'Silueta running de 2005 recuperada en malla y cuero sintético, con GEL en talón y antepié. Colorway cream / pure silver.' },
+    { id: 'zk2', name: '550 White Green', brand: 'New Balance', cat: 'zapatillas', price: 249900, stock: true, trending: true, desc: 'Básquet de los 80 en cuero blanco con detalles verdes y suela de goma. Calza fiel al talle.' },
+    { id: 'zk3', name: '9060 Rain Cloud', brand: 'New Balance', cat: 'zapatillas', price: 319900, stock: false, trending: true, desc: 'Reinterpretación del 99X con entresuela ABZORB y SBS. Gris cemento con panel de malla.' },
+    { id: 'zk4', name: 'Mexico 66', brand: 'Onitsuka Tiger', cat: 'zapatillas', price: 219900, stock: true, trending: false, desc: 'Clásico japonés en cuero blanco con las tiras Onitsuka azul y rojo. Suela EVA delgada.' },
+    { id: 'zk5', name: 'Dunk Low Panda', brand: 'Nike', cat: 'zapatillas', price: 259900, stock: false, trending: true, desc: 'Cuero blanco y negro, corte bajo, cuello acolchado. El par más pedido del catálogo.' },
+    { id: 'zk7', name: 'Samba OG', brand: 'Adidas', cat: 'zapatillas', price: 209900, stock: true, trending: false, promo: 10, desc: 'Cuero negro con las tres tiras en blanco, puntera de gamuza y suela de goma.' },
+    { id: 'zk10', name: 'Superstar Penstar', brand: 'Golden Goose', cat: 'zapatillas', price: 689900, stock: false, trending: false, desc: 'Cuero italiano con estrella lateral y tratamiento vintage hecho a mano.' },
+    { id: 'in1', name: 'Hoodie Essentials FW', brand: 'Essentials', cat: 'indumentaria', price: 149900, stock: true, trending: false, desc: 'Buzo oversize de algodón peinado 480 g con logo de goma en el pecho y capucha doble.' },
+    { id: 'in2', name: 'Box Logo Hoodie', brand: 'Supreme', cat: 'indumentaria', price: 429900, stock: false, trending: false, desc: 'Frisa pesada con box logo bordado, puños acanalados y bolsillo canguro.' },
+    { id: 'in4', name: 'Beta LT Jacket', brand: 'Arcteryx', cat: 'indumentaria', price: 899900, stock: true, trending: false, desc: 'Shell Gore-Tex de tres capas, capucha StormHood y costuras termoselladas.' },
+    { id: 'ca2', name: 'Tabby 26', brand: 'Coach', cat: 'carteras', price: 389900, stock: true, trending: false, desc: 'Cuero glovetanned con cierre turnlock, correa corta y bandolera desmontable.' },
+    { id: 'ca4', name: 'Bedford Legacy', brand: 'Michael Kors', cat: 'carteras', price: 219900, stock: true, trending: false, promo: 20, desc: 'Cuero saffiano con herrajes dorados y tres compartimentos internos.' }
+  ];
+
+  const SIZE_TABLES = {
+    zapatillas: { head: ['AR / EU', 'US Hombre', 'US Mujer', 'CM'], rows: [['38', '6', '7.5', '24.0'], ['39', '6.5', '8', '24.5'], ['40', '7.5', '9', '25.5'], ['41', '8', '9.5', '26.0'], ['42', '9', '10.5', '27.0'], ['43', '9.5', '11', '27.5']] },
+    indumentaria: { head: ['Talle', 'Pecho (cm)', 'Largo (cm)', 'Manga (cm)'], rows: [['S', '104', '66', '61'], ['M', '110', '69', '63'], ['L', '116', '72', '65'], ['XL', '122', '75', '67']] },
+    carteras: { head: ['Medida', 'Valor'], rows: [['Ancho', '26 cm'], ['Alto', '18 cm'], ['Profundidad', '9 cm'], ['Correa', '55 a 110 cm']] }
+  };
+
+  const state = { view: 'home', cat: null, brand: null, sort: 'destacados', stockOnly: false, pid: null, size: null, cart: [], user: null, authTab: 'register', order: null };
+  const promoEnds = Date.now() + 23 * 3600000 + 41 * 60000;
+
+  const $ = (s) => document.querySelector(s);
+  const fmt = (n) => '$ ' + Math.round(n).toLocaleString('es-AR');
+  const price = (p) => (p.promo ? p.price * (1 - p.promo / 100) : p.price);
+  const byId = (id) => PRODUCTS.find((p) => p.id === id);
+
+  // <data> guarda el valor numérico; <s> marca el precio anterior que ya no vale
+  function pricesHtml(p) {
+    return '<data value="' + Math.round(price(p)) + '">' + fmt(price(p)) + '</data>' + (p.promo ? '<s>' + fmt(p.price) + '</s>' : '');
+  }
+
+  function cardHtml(p) {
+    return '<li><article class="card"><a href="#" data-open="' + p.id + '">' +
+      '<figure class="ph"><figcaption>' + p.name + '</figcaption>' +
+        '<p class="badges">' +
+          (p.promo ? '<span class="badge solid">−' + p.promo + '%</span>' : '') +
+          (p.stock ? '<span class="badge">En stock</span>' : '') +
+        '</p></figure>' +
+      '<hgroup><p class="brand">' + p.brand + '</p><h3>' + p.name + '</h3></hgroup>' +
+      '<p class="prices num">' + pricesHtml(p) + '</p>' +
+      '<p class="meta">' + (p.stock ? 'Entrega inmediata · 24 a 72 h' : 'Por encargo · 3 semanas') + '</p>' +
+    '</a></article></li>';
+  }
+
+  function countdown() {
+    const ms = Math.max(0, promoEnds - Date.now());
+    const pad = (n) => String(n).padStart(2, '0');
+    return pad(Math.floor(ms / 3600000)) + ':' + pad(Math.floor(ms / 60000) % 60) + ':' + pad(Math.floor(ms / 1000) % 60);
+  }
+
+  function renderHome() {
+    $('#trending-grid').innerHTML = PRODUCTS.filter((p) => p.trending).slice(0, 4).map(cardHtml).join('');
+    $('#stock-grid').innerHTML = PRODUCTS.filter((p) => p.stock && !p.trending).slice(0, 4).map(cardHtml).join('');
+    const promo = PRODUCTS.find((p) => p.promo);
+    $('#promo-band').hidden = !promo;
+    if (!promo) return;
+    $('#promo-title').textContent = promo.brand + ' ' + promo.name + ' con ' + promo.promo + '% off';
+    $('#promo-cta').dataset.open = promo.id;
+  }
+
+  function renderCatalog() {
+    const scope = PRODUCTS.filter((p) => (!state.stockOnly || p.stock) && (!state.cat || p.cat === state.cat));
+    const list = scope.filter((p) => !state.brand || p.brand === state.brand);
+    list.sort((a, b) => {
+      if (state.sort === 'menor') return price(a) - price(b);
+      if (state.sort === 'mayor') return price(b) - price(a);
+      if (state.sort === 'nombre') return a.name.localeCompare(b.name);
+      return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
+    });
+    const brands = [...new Set(scope.map((p) => p.brand))];
+    $('#brand-chips').innerHTML = '<legend class="sr-only">Marca</legend>' + [['Todas las marcas', '']].concat(brands.map((b) => [b, b]))
+      .map(([label, v]) => '<button type="button" class="chip" data-brand="' + v + '" aria-pressed="' + ((state.brand || '') === v) + '">' + label + '</button>').join('');
+    $('#cat-crumb').textContent = state.stockOnly ? 'MISSL · Disponibilidad' : 'MISSL · Catálogo';
+    $('#cat-title').textContent = state.stockOnly ? 'Entrega inmediata' : state.cat ? CATS[state.cat] : 'Todo el catálogo';
+    $('#cat-sub').textContent = state.stockOnly
+      ? 'Artículos con stock físico en Buenos Aires: los despachamos dentro de 24 a 72 horas de acreditado el pago.'
+      : 'Modelos por encargo con entrega en 3 semanas. Filtrá por marca y ordená según tu preferencia.';
+    $('#result-count').textContent = list.length + (list.length === 1 ? ' producto' : ' productos');
+    $('#sort-select').value = state.sort;
+    $('#catalog-grid').innerHTML = list.map(cardHtml).join('');
+  }
+
+  function renderProduct() {
+    const p = byId(state.pid) || PRODUCTS[0];
+    $('#pdp-crumb').innerHTML = '<li><a href="#" data-go="catalog" data-cat="' + p.cat + '">' + CATS[p.cat] + '</a></li><li>' + p.brand + '</li><li aria-current="page">' + p.name + '</li>';
+    $('#pdp-main').innerHTML = '<figcaption>Foto principal · ' + p.name + '</figcaption>';
+    $('#pdp-brand').textContent = p.brand;
+    $('#pdp-name').textContent = p.name;
+    $('#pdp-prices').innerHTML = pricesHtml(p) + (p.promo ? '<span class="badge solid">−' + p.promo + '%</span>' : '');
+    $('#pdp-delivery').innerHTML = p.stock
+      ? '<span class="dot ok"></span><span><strong>Entrega inmediata.</strong> Despacho en 24 a 72 h desde Buenos Aires.</span>'
+      : '<span class="dot"></span><span><strong>Por encargo.</strong> Lo traemos para vos en 3 semanas.</span>';
+    $('#pdp-sizes').innerHTML = SIZES[p.cat].map((s) => '<button type="button" class="size" data-size="' + s + '" aria-pressed="' + (state.size === s) + '">' + s + '</button>').join('');
+    $('#size-hint').textContent = state.size ? 'Talle ' + state.size + ' seleccionado' : 'Elegí un talle para continuar';
+    $('#pdp-desc').textContent = p.desc;
+    const t = SIZE_TABLES[p.cat];
+    $('#size-table').innerHTML = '<thead><tr>' + t.head.map((h) => '<th scope="col">' + h + '</th>').join('') + '</tr></thead><tbody>' +
+      t.rows.map((r) => '<tr>' + r.map((c) => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</tbody>';
+    $('#related-grid').innerHTML = PRODUCTS.filter((x) => x.cat === p.cat && x.id !== p.id).slice(0, 4).map(cardHtml).join('');
+  }
+
+  function totals() {
+    const sub = state.cart.reduce((a, c) => a + price(byId(c.id)) * c.qty, 0);
+    const disc = state.user ? sub * DISCOUNT / 100 : 0;
+    return { sub, disc, total: sub - disc };
+  }
+
+  function renderCart() {
+    const root = $('#cart-root');
+    if (!state.cart.length) {
+      root.className = 'band empty';
+      root.innerHTML = '<h2>Tu carrito está vacío.</h2><p class="note" style="font-size:15px">Explorá el catálogo o mirá lo que tenemos para entrega inmediata.</p><a href="#" class="btn" data-go="catalog">Ver catálogo</a>';
+      return;
+    }
+    root.className = 'band cart-layout';
+    root.innerHTML = '<ul>' + state.cart.map((c, i) => {
+      const p = byId(c.id);
+      return '<li><article class="line">' +
+        '<figure class="ph"><figcaption>Foto</figcaption></figure>' +
+        '<hgroup><p class="eyebrow" style="font-size:10px">' + p.brand + '</p><h3>' + p.name + '</h3>' +
+          '<p class="sub">Talle ' + c.size + ' · ' + (p.stock ? 'Entrega inmediata' : 'Por encargo · 3 semanas') + '</p></hgroup>' +
+        '<p class="qty"><button type="button" data-dec="' + i + '" aria-label="Restar uno">−</button><output class="num">' + c.qty + '</output><button type="button" data-inc="' + i + '" aria-label="Sumar uno">+</button></p>' +
+        '<p class="line-price"><data class="num" value="' + Math.round(price(p) * c.qty) + '">' + fmt(price(p) * c.qty) + '</data><button type="button" class="link-btn" data-remove="' + i + '">Quitar</button></p>' +
+      '</article></li>';
+    }).join('') + '</ul>' +
+    '<aside class="summary" aria-label="Resumen del pedido">' + summaryHtml(true) + '</aside>';
+  }
+
+  // Resumen compartido entre el carrito (con botón) y el checkout (con detalle de ítems)
+  function summaryHtml(inCart) {
+    const t = totals();
+    return '<h2>Resumen</h2>' +
+      (inCart ? '' : '<ul class="mini num">' + state.cart.map((c) => {
+        const p = byId(c.id);
+        return '<li><span>' + p.name + ' · T' + c.size + ' × ' + c.qty + '</span><data value="' + Math.round(price(p) * c.qty) + '">' + fmt(price(p) * c.qty) + '</data></li>';
+      }).join('') + '</ul>') +
+      '<dl class="totals num">' +
+        '<dt>Subtotal</dt><dd>' + fmt(t.sub) + '</dd>' +
+        '<dt>' + (state.user ? 'Descuento registro (' + DISCOUNT + '%)' : 'Descuento por registro') + '</dt><dd>' + (state.user ? '− ' + fmt(t.disc) : 'Registrate y ahorrá ' + DISCOUNT + '%') + '</dd>' +
+        '<dt>Envío</dt><dd>Gratis</dd>' +
+        '<dt class="total">Total</dt><dd class="total">' + fmt(t.total) + '</dd>' +
+      '</dl>' +
+      (inCart ? '<button type="button" class="btn block" data-act="checkout">' + (state.user ? 'Continuar al pago' : 'Iniciar compra') + '</button>' : '') +
+      '<p class="note">' + (state.user ? 'Pago con Mercado Pago, débito o transferencia. Sin crédito, sin cuotas.' : 'Necesitás una cuenta para comprar: al registrarte se aplica el ' + DISCOUNT + '% de descuento.') + '</p>';
+  }
+
+  function renderCheckout() {
+    $('#checkout-summary').innerHTML = summaryHtml(false);
+  }
+
+  function renderAdmin() {
+    $('#admin-count').textContent = PRODUCTS.length + (PRODUCTS.length === 1 ? ' producto publicado' : ' productos publicados');
+    $('#admin-rows').innerHTML = PRODUCTS.map((p) =>
+      '<tr>' +
+        '<th scope="row">' + p.name + '<small>' + p.brand + ' · MSL-' + p.id.toUpperCase() + '</small></th>' +
+        '<td>' + CATS[p.cat] + '</td>' +
+        '<td>' + fmt(price(p)) + (p.promo ? '<small>−' + p.promo + '% sobre ' + fmt(p.price) + '</small>' : '') + '</td>' +
+        '<td><span class="badge' + (p.stock ? ' solid' : '') + '">' + (p.stock ? 'En stock' : 'Por encargo') + '</span></td>' +
+        '<td class="row-actions">' +
+          '<button type="button" class="mini-btn" data-open="' + p.id + '">Ver detalle</button>' +
+          '<button type="button" class="mini-btn" data-edit="' + p.id + '">Modificar</button>' +
+          '<button type="button" class="mini-btn danger" data-del="' + p.id + '">Eliminar</button>' +
+        '</td>' +
+      '</tr>').join('');
+  }
+
+  // Alta / modificación en un <dialog> modal
+  let editingId = null;
+  function openEdit(id) {
+    editingId = id;
+    const p = id ? byId(id) : { name: '', brand: '', cat: 'zapatillas', price: '', promo: 0, stock: true, desc: '' };
+    $('#e-name').value = p.name;
+    $('#e-brand').value = p.brand;
+    $('#e-cat').value = p.cat;
+    $('#e-price').value = p.price;
+    $('#e-promo').value = p.promo || 0;
+    $('#e-stock').checked = p.stock;
+    $('#e-desc').value = p.desc;
+    $('#edit-title').textContent = id ? 'Modificar producto' : 'Nuevo producto';
+    $('#edit-save').textContent = id ? 'Guardar cambios' : 'Cargar producto';
+    $('#edit-error').hidden = true;
+    $('#edit-dialog').showModal();
+  }
+
+  // Borrado con confirmación en un <dialog> (el sitio no usa confirm())
+  let deletingId = null;
+  function openDelete(id) {
+    const p = byId(id);
+    deletingId = id;
+    $('#del-text').textContent = p.brand + ' ' + p.name + ' se va a quitar del catálogo. Esta acción no se puede deshacer.';
+    $('#del-dialog').returnValue = '';
+    $('#del-dialog').showModal();
+  }
+
+  function renderAuth() {
+    const reg = state.authTab === 'register';
+    document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.tab === state.authTab)));
+    $('#auth-title').textContent = reg ? 'Creá tu cuenta' : 'Ingresá a tu cuenta';
+    $('#field-name').hidden = !reg;
+    $('#auth-perk').hidden = !reg;
+    $('#auth-cta').textContent = reg ? 'Registrarme y obtener ' + DISCOUNT + '%' : 'Ingresar';
+  }
+
+  function renderConfirm() {
+    const o = state.order;
+    if (!o) return;
+    $('#confirm-kv').innerHTML = '<dt>Pedido</dt><dd>' + o.code + '</dd><dt>Total</dt><dd>' + o.total + '</dd><dt>Medio de pago</dt><dd>' + o.method + '</dd><dt>Envío a</dt><dd>' + o.address + '</dd><dt>Email</dt><dd>' + o.email + '</dd><dt>Entrega estimada</dt><dd>' + o.eta + '</dd>';
+  }
+
+  function render() {
+    const view = state.view === 'stock' ? 'catalog' : state.view;
+    document.querySelectorAll('[data-view]').forEach((s) => { s.hidden = s.dataset.view !== view; });
+    document.querySelectorAll('.main-nav a, .account-nav a').forEach((a) => {
+      const g = a.dataset.go;
+      const on = g === 'catalog' ? state.view === 'catalog' && a.dataset.cat === state.cat : g === state.view;
+      a.setAttribute('aria-current', String(on));
+    });
+    $('#cart-count').textContent = state.cart.reduce((a, c) => a + c.qty, 0);
+    $('#account-link').textContent = state.user ? state.user.name.split(' ')[0] : 'Ingresar';
+    if (view === 'home') renderHome();
+    if (view === 'catalog') renderCatalog();
+    if (view === 'product') renderProduct();
+    if (view === 'cart') renderCart();
+    if (view === 'auth') renderAuth();
+    if (view === 'confirm') renderConfirm();
+    if (view === 'checkout') renderCheckout();
+    if (view === 'admin') renderAdmin();
+  }
+
+  function go(view, extra) {
+    Object.assign(state, { view }, extra || {});
+    window.scrollTo(0, 0);
+    render();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 3600);
+  }
+
+  function addToCart(thenCheckout) {
+    const p = byId(state.pid);
+    if (!state.size && SIZES[p.cat].length > 1) { toast('Elegí un talle antes de agregar al carrito'); return; }
+    const size = state.size || SIZES[p.cat][0];
+    const line = state.cart.find((c) => c.id === p.id && c.size === size);
+    if (line) line.qty++; else state.cart.push({ id: p.id, size, qty: 1 });
+    if (thenCheckout) { go(state.user ? 'checkout' : 'auth', { authTab: 'register' }); return; }
+    render();
+    toast(p.name + ' · talle ' + size + ' agregado al carrito');
+  }
+
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-go], [data-open], [data-brand], [data-size], [data-act], [data-inc], [data-dec], [data-remove], [data-tab], [data-edit], [data-del]');
+    if (!el) return;
+    e.preventDefault();
+    const d = el.dataset;
+    if (d.open) return go('product', { pid: d.open, size: null });
+    if (d.edit) return openEdit(d.edit);
+    if (d.del) return openDelete(d.del);
+    if (d.act === 'new') return openEdit(null);
+    if (d.act === 'close-dialog') return el.closest('dialog').close();
+    if (d.go === 'stock') return go('stock', { stockOnly: true, cat: null, brand: null });
+    if (d.go === 'catalog') return go('catalog', { stockOnly: false, cat: d.cat || null, brand: null });
+    if (d.go) return go(d.go);
+    if (d.brand !== undefined) { state.brand = d.brand || null; return renderCatalog(); }
+    if (d.size) { state.size = d.size; return renderProduct(); }
+    if (d.tab) { state.authTab = d.tab; return renderAuth(); }
+    if (d.inc) { state.cart[+d.inc].qty++; return render(); }
+    if (d.dec) { const c = state.cart[+d.dec]; c.qty = Math.max(1, c.qty - 1); return render(); }
+    if (d.remove) { state.cart.splice(+d.remove, 1); return render(); }
+    if (d.act === 'add') return addToCart(false);
+    if (d.act === 'buy') return addToCart(true);
+    if (d.act === 'checkout') {
+      if (!state.user) { toast('Necesitás una cuenta antes de iniciar la compra'); return go('auth', { authTab: 'register' }); }
+      return go('checkout');
+    }
+  });
+
+  // Simulación del pago: valida el envío, muestra "Procesando" y genera el pedido
+  let orderSeq = 1042;
+  $('#checkout-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const address = $('#c-address').value.trim(), city = $('#c-city').value.trim(), phone = $('#c-phone').value.trim();
+    if (!state.cart.length) { toast('Tu carrito está vacío'); return go('cart'); }
+    if (!address || !city || !phone) { toast('Completá dirección, localidad y teléfono para continuar'); return; }
+    const method = document.querySelector('input[name="pay"]:checked').value;
+    const btn = $('#pay-btn');
+    btn.disabled = true;
+    btn.textContent = 'Procesando pago…';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Confirmar pago';
+      const anyOrder = state.cart.some((c) => !byId(c.id).stock);
+      orderSeq++;
+      const order = {
+        code: '#MSL-' + orderSeq, total: fmt(totals().total), method, address: address + ', ' + city, email: state.user.email,
+        eta: anyOrder ? '3 semanas (modelo por encargo)' : '24 a 72 horas (stock disponible)'
+      };
+      go('confirm', { cart: [], order });
+    }, 1400);
+  });
+
+  $('#edit-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = {
+      name: $('#e-name').value.trim(), brand: $('#e-brand').value.trim(), cat: $('#e-cat').value,
+      price: Number($('#e-price').value), promo: Number($('#e-promo').value) || 0,
+      stock: $('#e-stock').checked, desc: $('#e-desc').value.trim()
+    };
+    if (!data.name || !data.brand || !(data.price > 0)) {
+      $('#edit-error').textContent = 'Completá nombre, marca y un precio mayor a 0.';
+      $('#edit-error').hidden = false;
+      return;
+    }
+    if (editingId) Object.assign(byId(editingId), data);
+    else PRODUCTS.unshift({ id: 'n' + Date.now().toString(36), trending: false, ...data, desc: data.desc || 'Descripción pendiente de carga.' });
+    $('#edit-dialog').close();
+    render();
+    toast(editingId ? data.name + ' actualizado' : data.name + ' cargado al catálogo');
+  });
+
+  $('#del-dialog').addEventListener('close', () => {
+    if ($('#del-dialog').returnValue !== 'delete') return;
+    const i = PRODUCTS.findIndex((p) => p.id === deletingId);
+    if (i < 0) return;
+    const [p] = PRODUCTS.splice(i, 1);
+    state.cart = state.cart.filter((c) => c.id !== p.id);
+    render();
+    toast(p.name + ' eliminado del catálogo');
+  });
+
+  $('#sort-select').addEventListener('change', (e) => { state.sort = e.target.value; renderCatalog(); });
+  $('#filters').addEventListener('submit', (e) => e.preventDefault());
+  $('#buy-form').addEventListener('submit', (e) => e.preventDefault());
+
+  $('#auth-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const reg = state.authTab === 'register';
+    const name = $('#f-name').value.trim(), email = $('#f-email').value.trim(), pass = $('#f-pass').value;
+    if (!email || !pass || (reg && !name)) { toast('Completá todos los campos para continuar'); return; }
+    state.user = { name: name || email.split('@')[0], email };
+    go(state.cart.length ? 'checkout' : 'home');
+    toast(reg ? 'Cuenta creada · ' + DISCOUNT + '% aplicado a tu primera compra' : 'Hola de nuevo, ' + state.user.name);
+  });
+
+  setInterval(() => { const t = $('#promo-timer'); if (t) t.textContent = countdown(); }, 1000);
+  $('#promo-timer').textContent = countdown();
+  render();
+</script>
+</body>
+</html>
