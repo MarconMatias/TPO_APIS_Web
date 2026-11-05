@@ -1,0 +1,59 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  width: max-content;
+  max-width: calc(100% - 32px);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--inv-bg);
+  color: var(--inv-fg);
+  padding: 12px 12px 12px 22px;
+  font-size: 13px;
+  animation: aparecer 200ms ease-out;
+}
+
+.accion {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.cerrar {
+  border: 0;
+  background: none;
+  color: var(--inv-soft);
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--inv-fg);
+  }
+}
+
+.toast :focus-visible {
+  outline-color: var(--inv-fg);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

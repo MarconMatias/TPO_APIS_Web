@@ -1,0 +1,15 @@
+// Puntos de corte compartidos: grillas de 4 → 2 columnas en tablet, 1 columna en mobile.
+$tablet: 900px;
+$mobile: 560px;
+
+@mixin tablet {
+  @media (max-width: $tablet) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: $mobile) {
+    @content;
+  }
+}

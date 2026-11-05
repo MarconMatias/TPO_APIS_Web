@@ -1,0 +1,19 @@
+.ph {
+  position: relative;
+  background: var(--surface);
+  background-image: repeating-linear-gradient(135deg, transparent 0 14px, var(--surface-2) 14px 15px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  max-width: 100%;
+
+  figcaption {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--soft);
+    font-weight: 600;
+    padding: 0 12px;
+    text-align: center;
+  }
+}

@@ -1,0 +1,99 @@
+@use '../styles/breakpoints' as bp;
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+}
+
+.texto {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px 24px;
+  border-top: 1px solid var(--fg);
+  padding-top: 18px;
+  font-size: 14px;
+
+  dt {
+    color: var(--soft);
+  }
+
+  dd {
+    font-weight: 600;
+  }
+}
+
+.intro {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.equipo {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  padding-bottom: 24px;
+}
+
+.miembro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--fg);
+  padding-top: 18px;
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    font-size: 13px;
+    color: var(--soft);
+  }
+}
+
+.avatar {
+  width: 72px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--inv-bg);
+  color: var(--inv-fg);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+}
+
+@include bp.tablet {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .equipo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.mobile {
+  .datos {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+
+    dd {
+      margin-bottom: 10px;
+    }
+  }
+}

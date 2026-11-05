@@ -1,0 +1,153 @@
+@use '../styles/breakpoints' as bp;
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  column-gap: clamp(28px, 5vw, 64px);
+  row-gap: 26px;
+  padding-left: var(--band-left);
+  border-bottom: 1px solid var(--line);
+
+  hgroup {
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 620px;
+    padding-top: clamp(48px, 8vw, 88px);
+  }
+
+  h1 {
+    font-weight: 800;
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  hgroup p:last-child {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 46ch;
+  }
+}
+
+.botones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-self: start;
+  padding-bottom: clamp(48px, 8vw, 88px);
+}
+
+.foto {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  min-height: 440px;
+}
+
+.promo {
+  background: var(--inv-bg);
+  color: var(--inv-fg);
+  margin-top: 48px;
+  padding-block: 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+
+  hgroup {
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.eyebrow) {
+    color: var(--inv-soft);
+  }
+
+  h2 {
+    font-size: clamp(20px, 2.6vw, 26px);
+    font-weight: 700;
+  }
+
+  :global(.btn) {
+    background: var(--inv-fg);
+    color: var(--inv-bg);
+    border-color: var(--inv-fg);
+  }
+
+  :focus-visible {
+    outline-color: var(--inv-fg);
+  }
+}
+
+.timer {
+  display: flex;
+  flex-direction: column;
+
+  time {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+}
+
+.categorias {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  a:hover h3 span {
+    transform: translateX(4px);
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  h3 span {
+    transition: transform 160ms;
+  }
+}
+
+.catFoto {
+  aspect-ratio: 4 / 3;
+}
+
+@include bp.tablet {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    padding-right: var(--band-right);
+  }
+
+  .botones {
+    padding-bottom: 8px;
+  }
+
+  .foto {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 300px;
+    margin-bottom: 32px;
+  }
+}
+
+@include bp.mobile {
+  .categorias {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

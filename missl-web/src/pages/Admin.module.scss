@@ -1,0 +1,67 @@
+.admin {
+  padding-block: 24px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--soft);
+
+  output {
+    margin-right: auto;
+  }
+}
+
+.buscar {
+  flex: 1 1 260px;
+  max-width: 380px;
+
+  input {
+    padding: 11px 14px;
+    font-size: 14px;
+  }
+}
+
+.tabla {
+  th,
+  td {
+    vertical-align: middle;
+  }
+
+  tbody th {
+    font-size: 14px;
+    color: var(--fg);
+    font-weight: 500;
+  }
+
+  small {
+    display: block;
+    color: var(--soft);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  tbody tr:hover {
+    background: var(--surface);
+  }
+}
+
+.acciones {
+  text-align: right;
+
+  > * + * {
+    margin-left: 6px;
+  }
+}
+
+.vacio {
+  text-align: center;
+  color: var(--soft);
+  padding-block: 32px;
+}

@@ -1,0 +1,29 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-block: 22px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orden {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--soft);
+
+  select {
+    width: auto;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--fg);
+  }
+}
