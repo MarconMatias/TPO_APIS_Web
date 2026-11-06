@@ -33,8 +33,9 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           const { token, email } = await adminApi.verificar2fa({ challengeId, codigo });
           set({ token, email, challengeId: null });
         } catch (error) {
-          // El backend consume el desafío aunque el código sea incorrecto: hay que repetir el paso 1.
-          set({ challengeId: null });
+          // missl-api permite hasta 5 intentos por desafío. Si venció o se agotaron los intentos,
+          // el mensaje pide volver a iniciar sesión: ahí se descarta el desafío y hay que repetir el paso 1.
+          if (error instanceof Error && /iniciar sesion/i.test(error.message)) set({ challengeId: null });
           throw error;
         }
       },

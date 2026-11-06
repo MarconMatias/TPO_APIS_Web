@@ -19,7 +19,10 @@ export function password(valor: string): string | null {
 
 export function telefono(valor: string): string | null {
   if (!valor.trim()) return 'Ingresá un teléfono de contacto.';
-  if (/[^\d\s()+-]/.test(valor)) return 'El teléfono solo puede tener números, espacios, guiones y paréntesis.';
+  // Misma regla que VentaRequest en missl-api: "+" solo al principio; números, espacios, guiones y paréntesis.
+  if (!/^\+?[\d\s()-]+$/.test(valor.trim())) {
+    return 'El teléfono solo puede tener números, espacios, guiones, paréntesis y un "+" al principio.';
+  }
   const digitos = valor.replace(/\D/g, '').length;
   return digitos >= 8 && digitos <= 15 ? null : 'El teléfono debe tener entre 8 y 15 dígitos.';
 }

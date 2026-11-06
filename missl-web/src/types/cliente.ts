@@ -13,17 +13,15 @@ export interface ClienteLoginRequest {
   password: string;
 }
 
-/** ClienteDTO */
+/** ClienteDTO (GET /auth/me): mismos datos de cuenta que ClienteAuthResponse, sin el token. */
 export interface Cliente {
-  id: number;
   nombre: string;
   email: string;
-  /** El 5% de bienvenida aplica solo mientras sea false (lo controla el backend). */
-  descuentoRegistroUsado: boolean;
+  /** true mientras no haya usado el 5% de bienvenida (lo controla el backend). */
+  descuentoDisponible: boolean;
 }
 
-/** ClienteAuthResponse */
-export interface ClienteAuthResponse {
+/** ClienteAuthResponse (registro y login). */
+export interface ClienteAuthResponse extends Cliente {
   token: string;
-  cliente: Cliente;
 }

@@ -26,7 +26,7 @@ export function Admin2fa() {
 
   if (!desafioInicial) return <Navigate to="/admin" replace />;
 
-  // Un código incorrecto consume el desafío en el backend: hay que repetir el paso 1.
+  // El backend admite hasta 5 códigos incorrectos; si se agotan o vence el desafío, hay que repetir el paso 1.
   const desafioConsumido = !desafioVigente;
 
   const onSubmit = form.enviar(async ({ codigo }) => {
@@ -41,7 +41,10 @@ export function Admin2fa() {
         <p className="eyebrow">MISSL · Administración · Paso 2 de 2</p>
         <h1 id="admin-2fa-titulo">Verificación en dos pasos</h1>
       </hgroup>
-      <p className={styles.perk}>Abrí tu app autenticadora (Google Authenticator, Authy…) e ingresá el código de MISSL.</p>
+      <p className={styles.perk}>
+        Abrí tu app autenticadora (Google Authenticator, Authy…) e ingresá el código de MISSL. Tenés 5 intentos y 5
+        minutos.
+      </p>
 
       <form onSubmit={onSubmit} noValidate aria-busy={form.enviando}>
         <Field id={form.id('codigo')} label="Código de 6 dígitos" error={form.errores.codigo}>

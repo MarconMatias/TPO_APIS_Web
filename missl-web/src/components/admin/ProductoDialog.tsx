@@ -71,7 +71,8 @@ export function ProductoDialog({ producto, existentes, onCerrar, onGuardado }: P
               categoria: valores.categoria as Categoria,
               precio: Number(valores.precio),
               enStock: valores.enStock,
-              descripcion: valores.descripcion.trim() || null,
+              // "" borra la descripción en el backend; null significaría "no modificar".
+              descripcion: valores.descripcion.trim(),
             };
             const guardado = producto
               ? await adminApi.editarProducto(producto.id, request)

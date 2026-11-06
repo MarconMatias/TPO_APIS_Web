@@ -23,13 +23,13 @@ export const useAuthStore = create<AuthState>()(
       cliente: null,
 
       registrar: async (datos) => {
-        const { token, cliente } = await authApi.registrar(datos);
+        const { token, ...cliente } = await authApi.registrar(datos);
         set({ token, cliente });
         return cliente;
       },
 
       ingresar: async (datos) => {
-        const { token, cliente } = await authApi.ingresar(datos);
+        const { token, ...cliente } = await authApi.ingresar(datos);
         set({ token, cliente });
         return cliente;
       },
@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
 
       salir: () => set({ token: null, cliente: null }),
     }),
-    { name: 'missl_sesion_cliente', storage: createJSONStorage(() => storageSeguro('local')) },
+    // v2: el formato de la cuenta cambió (descuentoDisponible); una sesión guardada con el formato viejo se descarta.
+    { name: 'missl_sesion_cliente_v2', storage: createJSONStorage(() => storageSeguro('local')) },
   ),
 );

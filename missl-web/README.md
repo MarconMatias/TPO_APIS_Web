@@ -22,8 +22,8 @@ npm run lint
 | Rol | Email | Contraseña | Notas |
 | --- | --- | --- | --- |
 | Cliente | `demo@missl.com.ar` | `missl2026` | Descuento de bienvenida sin usar (se consume con la primera compra) |
-| Cliente | `camila.duarte@gmail.com` | `missl2026` | Descuento ya usado |
-| Admin | `admin@missl.com.ar` | `missl2026` | 2FA: cargar el secreto TOTP `IWSTKBSLPAMCBUTFDQMNNS63VEBYIFSI` en Google Authenticator o Authy |
+| Cliente | `camila.duarte@gmail.com` (y el resto de los clientes del seed) | `missl1234` | Descuento ya usado; tiene historial de compras |
+| Admin | `admin@missl.com.ar` | `missl2026` | 2FA: cargar el secreto TOTP `IWSTKBSLPAMCBUTFDQMNNS63VEBYIFSI` en Google Authenticator o Authy. Hasta 5 intentos por código |
 
 ## Integración con missl-api
 
@@ -32,7 +32,7 @@ npm run lint
 | Inicio, catálogo, carrito | `GET /productos?categoria=&stock=&orden=` | — |
 | Ficha de producto | `GET /productos/{id}` (talles con stock y sugeridos) | — |
 | Registro / ingreso | `POST /auth/registro`, `POST /auth/login` | — |
-| Mi cuenta | `GET /auth/me` | Cliente |
+| Mi cuenta | `GET /auth/me`, `GET /ventas/mias` (historial) | Cliente |
 | Checkout | `POST /ventas` | Cliente |
 | Admin, paso 1 y paso 2 | `POST /admin/login`, `POST /admin/2fa` | — |
 | Panel de administración | `GET/POST/PUT/DELETE /admin/productos`, `GET /admin/productos/promociones`, `PATCH /admin/productos/{id}/promocion` | Admin |

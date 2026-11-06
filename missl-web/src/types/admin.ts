@@ -38,7 +38,7 @@ export interface ProductoAdmin {
   descripcion: string | null;
 }
 
-/** ProductoAltaRequest: alta y modificación. */
+/** ProductoAltaRequest: alta y modificación. descripcion: null = no se modifica, "" = se borra. */
 export interface ProductoAltaRequest {
   nombre: string;
   marca: string;

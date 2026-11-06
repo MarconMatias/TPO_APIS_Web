@@ -17,6 +17,17 @@ export interface VentaRequest {
   telefono: string;
 }
 
+/** VentaClienteDTO: GET /ventas/mias (historial del cliente). */
+export interface VentaCliente {
+  codigo: string;
+  fecha: string;
+  medioPago: MedioPago;
+  subtotal: number;
+  descuento: number;
+  total: number;
+  estado: 'PENDIENTE' | 'ENTREGADO';
+}
+
 /** ConfirmacionDTO */
 export interface Confirmacion {
   codigo: string;

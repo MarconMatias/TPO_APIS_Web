@@ -34,7 +34,7 @@ export interface Totales {
  */
 export function calcularTotales(lineas: LineaCarrito[], cliente: Cliente | null): Totales {
   const subtotal = lineas.reduce((acc, l) => acc + l.subtotal, 0);
-  const aplicaDescuento = cliente !== null && !cliente.descuentoRegistroUsado;
+  const aplicaDescuento = cliente !== null && cliente.descuentoDisponible;
   const descuento = aplicaDescuento ? (subtotal * DESCUENTO_REGISTRO_PCT) / 100 : 0;
   return { subtotal, descuento, total: subtotal - descuento, aplicaDescuento };
 }

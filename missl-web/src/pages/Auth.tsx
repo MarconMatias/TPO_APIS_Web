@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ventasApi } from '../api/ventasApi';
 import { Field } from '../components/ui/Field';
 import { FormAlert } from '../components/ui/FormAlert';
 import { DESCUENTO_REGISTRO_PCT } from '../constants/negocio';
+import { useApi } from '../hooks/useApi';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useForm } from '../hooks/useForm';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import type { Cliente } from '../types/cliente';
+import { formatPrecio } from '../util/precio';
 import * as v from '../util/validacion';
 import styles from './Auth.module.scss';
 
@@ -181,15 +184,64 @@ function MiCuenta({ cliente }: { cliente: Cliente }) {
         <dd>{cliente.email}</dd>
         <dt>Descuento de bienvenida</dt>
         <dd>
-          {cliente.descuentoRegistroUsado
-            ? 'Ya usado en tu primera compra'
-            : `${DESCUENTO_REGISTRO_PCT}% disponible para tu primera compra`}
+          {cliente.descuentoDisponible
+            ? `${DESCUENTO_REGISTRO_PCT}% disponible para tu primera compra`
+            : 'Ya usado en tu primera compra'}
         </dd>
       </dl>
       <p className={styles.acciones}>
         <Link to="/catalogo" className="btn">Seguir comprando</Link>
         <button type="button" className="btn ghost" onClick={cerrarSesion}>Cerrar sesión</button>
       </p>
+
+      <MisCompras />
+    </section>
+  );
+}
+
+/** Historial del cliente: GET /ventas/mias. */
+function MisCompras() {
+  const { datos, error, recargar } = useApi(() => ventasApi.mias(), []);
+
+  return (
+    <section className={styles.compras} aria-labelledby="mis-compras-titulo">
+      <h2 id="mis-compras-titulo">Mis compras</h2>
+      {error ? (
+        <p className="form-error" role="alert">
+          {error.message}{' '}
+          <button type="button" className="link-btn" onClick={recargar}>Reintentar</button>
+        </p>
+      ) : !datos ? (
+        <p role="status" className="note">Cargando tus compras…</p>
+      ) : datos.length === 0 ? (
+        <p className="note">Todavía no hiciste ninguna compra.</p>
+      ) : (
+        <figure className="table-scroll">
+          <table className="num">
+            <caption className="sr-only">Historial de compras</caption>
+            <thead>
+              <tr>
+                <th scope="col">Pedido</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Total</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {datos.map((v) => (
+                <tr key={v.codigo}>
+                  <th scope="row">{v.codigo}</th>
+                  <td>
+                    <time dateTime={v.fecha}>{new Date(v.fecha).toLocaleDateString('es-AR')}</time>
+                  </td>
+                  <td>{formatPrecio(v.total)}</td>
+                  <td>{v.estado === 'PENDIENTE' ? 'Pendiente' : 'Entregado'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </figure>
+      )}
     </section>
   );
 }
