@@ -1,22 +1,26 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { ItemCarrito } from '../types';
-import { storageSeguro } from '../util/simular';
+import type { ItemCarrito } from '../types/carrito';
+import { storageSeguro } from '../util/storage';
 
 interface CartState {
   items: ItemCarrito[];
-  agregar: (productoId: string, talle: string) => void;
+  agregar: (productoId: number, talle: string) => void;
   incrementar: (index: number) => void;
   decrementar: (index: number) => void;
   quitar: (index: number) => void;
-  /** Al borrar un producto del catálogo se lo saca también del carrito. */
-  quitarProducto: (productoId: string) => void;
+  /** Saca del carrito los productos que ya no están publicados (baja en el backend). */
+  conservarSolo: (idsVigentes: number[]) => void;
   vaciar: () => void;
 }
 
 const conCantidad = (items: ItemCarrito[], index: number, delta: number) =>
   items.map((item, n) => (n === index ? { ...item, cantidad: Math.max(1, item.cantidad + delta) } : item));
 
+/**
+ * Carrito del lado del cliente (no hay endpoint de carrito en missl-api): guarda solo
+ * id + talle + cantidad; precios y descuentos se toman siempre de la API.
+ */
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -30,10 +34,14 @@ export const useCartStore = create<CartState>()(
       incrementar: (index) => set({ items: conCantidad(get().items, index, 1) }),
       decrementar: (index) => set({ items: conCantidad(get().items, index, -1) }),
       quitar: (index) => set({ items: get().items.filter((_, n) => n !== index) }),
-      quitarProducto: (productoId) => set({ items: get().items.filter((i) => i.productoId !== productoId) }),
+      conservarSolo: (idsVigentes) => {
+        const items = get().items;
+        const filtrados = items.filter((i) => idsVigentes.includes(i.productoId));
+        if (filtrados.length !== items.length) set({ items: filtrados });
+      },
       vaciar: () => set({ items: [] }),
     }),
-    { name: 'missl_carrito', storage: createJSONStorage(() => storageSeguro('local')) },
+    { name: 'missl_carrito_v2', storage: createJSONStorage(() => storageSeguro('local')) },
   ),
 );
 

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ResumenPedido } from '../components/cart/ResumenPedido';
+import { Cargando, ErrorDeCarga } from '../components/ui/Carga';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ImagePlaceholder } from '../components/ui/ImagePlaceholder';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -7,18 +8,18 @@ import { useCarrito } from '../hooks/useCarrito';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
-import type { LineaCarrito } from '../types';
-import { etiquetaEntrega, formatPrecio } from '../util/precio';
+import type { LineaCarrito } from '../types/carrito';
+import { entregaCorta, formatPrecio } from '../util/precio';
 import styles from './Cart.module.scss';
 
 export function Cart() {
   useDocumentTitle('Carrito');
   const navigate = useNavigate();
   const mostrarAviso = useToastStore((s) => s.mostrar);
-  const { lineas, totales, usuario } = useCarrito();
+  const { lineas, totales, cliente, hayItems, cargando, error, recargar } = useCarrito();
 
   const iniciarCompra = () => {
-    if (!usuario) {
+    if (!cliente) {
       mostrarAviso('Necesitás una cuenta antes de iniciar la compra');
       navigate('/cuenta?volver=/checkout');
       return;
@@ -26,35 +27,44 @@ export function Cart() {
     navigate('/checkout');
   };
 
-  return (
-    <>
-      <PageHeader id="h-carrito" eyebrow="MISSL · Tu compra" titulo="Carrito" />
-
-      {lineas.length === 0 ? (
+  const contenido = () => {
+    if (!hayItems) {
+      return (
         <EmptyState titulo="Tu carrito está vacío." texto="Explorá el catálogo o mirá lo que tenemos para entrega inmediata.">
           <Link to="/catalogo" className="btn">Ver catálogo</Link>
           <Link to="/entrega-inmediata" className="btn ghost">Entrega inmediata</Link>
         </EmptyState>
-      ) : (
-        <section className={`${styles.layout} band`} aria-label="Detalle de la compra">
-          <section aria-labelledby="h-items">
-            <h2 id="h-items" className="sr-only">Productos en el carrito</h2>
-            <ul>
-              {lineas.map((linea) => (
-                <li key={`${linea.productoId}-${linea.talle}`}>
-                  <LineaItem linea={linea} />
-                </li>
-              ))}
-            </ul>
-          </section>
+      );
+    }
+    if (error) return <ErrorDeCarga error={error} onReintentar={recargar} titulo="No pudimos actualizar los precios del carrito" />;
+    if (cargando) return <Cargando texto="Actualizando precios…" />;
 
-          <ResumenPedido lineas={lineas} totales={totales} usuario={usuario}>
-            <button type="button" className="btn block" onClick={iniciarCompra}>
-              {usuario ? 'Continuar al pago' : 'Iniciar compra'}
-            </button>
-          </ResumenPedido>
+    return (
+      <section className={`${styles.layout} band`} aria-label="Detalle de la compra">
+        <section aria-labelledby="h-items">
+          <h2 id="h-items" className="sr-only">Productos en el carrito</h2>
+          <ul>
+            {lineas.map((linea) => (
+              <li key={`${linea.productoId}-${linea.talle}`}>
+                <LineaItem linea={linea} />
+              </li>
+            ))}
+          </ul>
         </section>
-      )}
+
+        <ResumenPedido lineas={lineas} totales={totales} cliente={cliente}>
+          <button type="button" className="btn block" onClick={iniciarCompra}>
+            {cliente ? 'Continuar al pago' : 'Iniciar compra'}
+          </button>
+        </ResumenPedido>
+      </section>
+    );
+  };
+
+  return (
+    <>
+      <PageHeader id="h-carrito" eyebrow="MISSL · Tu compra" titulo="Carrito" />
+      {contenido()}
     </>
   );
 }
@@ -69,14 +79,14 @@ function LineaItem({ linea }: { linea: LineaCarrito }) {
 
   return (
     <article className={styles.line}>
-      <ImagePlaceholder texto="Foto" decorativa className={styles.foto} />
+      <ImagePlaceholder texto="Foto" decorativa className={styles.foto} imagenUrl={producto.imagenUrl} />
       <hgroup>
         <p className={`eyebrow ${styles.marca}`}>{producto.marca}</p>
         <h3>
           <Link to={`/producto/${producto.id}`}>{producto.nombre}</Link>
         </h3>
         <p className={styles.sub}>
-          Talle {talle} · {etiquetaEntrega(producto, true)}
+          Talle {talle} · {entregaCorta(producto)}
         </p>
       </hgroup>
 

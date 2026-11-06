@@ -1,46 +1,44 @@
-import { CATEGORIAS, LISTA_CATEGORIAS } from '../../data/catalogo';
+import { adminApi } from '../../api/adminApi';
+import { CATEGORIAS, LISTA_CATEGORIAS } from '../../constants/negocio';
 import { useForm } from '../../hooks/useForm';
-import { useProductStore } from '../../store/productStore';
 import { useToastStore } from '../../store/toastStore';
-import type { Categoria, Producto } from '../../types';
+import type { ProductoAdmin } from '../../types/admin';
+import type { Categoria } from '../../types/producto';
 import * as v from '../../util/validacion';
 import { Field } from '../ui/Field';
 import { FormAlert } from '../ui/FormAlert';
 import { Modal } from '../ui/Modal';
-import styles from './ProductoDialog.module.scss';
 
-const MAX_DESCRIPCION = 400;
+const MAX_DESCRIPCION = 2000;
 
 interface ProductoDialogProps {
   /** null = alta de un producto nuevo. */
-  producto: Producto | null;
+  producto: ProductoAdmin | null;
+  /** Para avisar de duplicados antes de enviar. */
+  existentes: ProductoAdmin[];
   onCerrar: () => void;
+  onGuardado: () => void;
 }
 
-function valoresIniciales(p: Producto | null) {
-  return {
-    nombre: p?.nombre ?? '',
-    marca: p?.marca ?? '',
-    categoria: p?.categoria ?? ('zapatillas' as string),
-    precio: p ? String(p.precio) : '',
-    descuento: p ? String(p.descuento) : '0',
-    enStock: p?.enStock ?? true,
-    tendencia: p?.tendencia ?? false,
-    descripcion: p?.descripcion ?? '',
-  };
-}
-
-/** Alta y modificación de productos con validación del lado del cliente. */
-export function ProductoDialog({ producto, onCerrar }: ProductoDialogProps) {
-  const productos = useProductStore((s) => s.productos);
-  const guardar = useProductStore((s) => s.guardar);
+/**
+ * Alta (POST /admin/productos) y modificación (PUT /admin/productos/{id}) con ProductoAltaRequest.
+ * Las validaciones replican las del backend; si igual falla, se muestra el mensaje que devuelve la API.
+ */
+export function ProductoDialog({ producto, existentes, onCerrar, onGuardado }: ProductoDialogProps) {
   const mostrarAviso = useToastStore((s) => s.mostrar);
   const esNuevo = producto === null;
 
   const form = useForm({
-    inicial: valoresIniciales(producto),
+    inicial: {
+      nombre: producto?.nombre ?? '',
+      marca: producto?.marca ?? '',
+      categoria: producto?.categoria ?? ('ZAPATILLAS' as string),
+      precio: producto ? String(producto.precio) : '',
+      enStock: producto?.enStock ?? true,
+      descripcion: producto?.descripcion ?? '',
+    },
     validar: (valores) => {
-      const duplicado = productos.some(
+      const duplicado = existentes.some(
         (p) =>
           p.id !== producto?.id &&
           p.nombre.trim().toLowerCase() === valores.nombre.trim().toLowerCase() &&
@@ -52,7 +50,6 @@ export function ProductoDialog({ producto, onCerrar }: ProductoDialogProps) {
           (duplicado ? 'Ya existe un producto con ese nombre y esa marca.' : null),
         marca: v.requerido(valores.marca, 'Ingresá la marca.'),
         precio: v.enteroEnRango(valores.precio, 1, 50_000_000, 'el precio'),
-        descuento: v.enteroEnRango(valores.descuento, 0, 90, 'el descuento'),
         descripcion:
           valores.descripcion.length > MAX_DESCRIPCION
             ? `La descripción no puede superar los ${MAX_DESCRIPCION} caracteres.`
@@ -68,24 +65,27 @@ export function ProductoDialog({ producto, onCerrar }: ProductoDialogProps) {
           noValidate
           aria-busy={form.enviando}
           onSubmit={form.enviar(async (valores) => {
-            const guardado = await guardar(producto?.id ?? null, {
+            const request = {
               nombre: valores.nombre.trim(),
               marca: valores.marca.trim(),
               categoria: valores.categoria as Categoria,
               precio: Number(valores.precio),
-              descuento: Number(valores.descuento),
               enStock: valores.enStock,
-              tendencia: valores.tendencia,
-              descripcion: valores.descripcion.trim() || 'Descripción pendiente de carga.',
-            });
+              descripcion: valores.descripcion.trim() || null,
+            };
+            const guardado = producto
+              ? await adminApi.editarProducto(producto.id, request)
+              : await adminApi.crearProducto(request);
             mostrarAviso(esNuevo ? `${guardado.nombre} se cargó al catálogo` : `${guardado.nombre} se actualizó`, {
               label: 'Ver ficha',
               to: `/producto/${guardado.id}`,
             });
+            onGuardado();
             cerrar();
           })}
         >
           <h2 id="dlg-producto-titulo">{esNuevo ? 'Nuevo producto' : 'Modificar producto'}</h2>
+          {producto && <p className="dlg-text">Código {producto.sku}</p>}
 
           <Field id={form.id('nombre')} label="Nombre" error={form.errores.nombre}>
             <input {...form.registrar('nombre')} required />
@@ -93,31 +93,24 @@ export function ProductoDialog({ producto, onCerrar }: ProductoDialogProps) {
           <Field id={form.id('marca')} label="Marca" error={form.errores.marca}>
             <input {...form.registrar('marca')} required />
           </Field>
-          <Field id={form.id('categoria')} label="Categoría">
+          <Field
+            id={form.id('categoria')}
+            label="Categoría"
+            ayuda={producto ? 'Si cambiás la categoría se regeneran los talles del producto.' : undefined}
+          >
             <select {...form.registrar('categoria')}>
               {LISTA_CATEGORIAS.map((c) => (
                 <option key={c} value={c}>{CATEGORIAS[c].label}</option>
               ))}
             </select>
           </Field>
-
-          <fieldset className={styles.dosColumnas}>
-            <legend className="sr-only">Precio y promoción</legend>
-            <Field id={form.id('precio')} label="Precio de lista (ARS)" error={form.errores.precio}>
-              <input {...form.registrar('precio')} type="number" min={1} step={100} inputMode="numeric" required />
-            </Field>
-            <Field id={form.id('descuento')} label="Descuento (%)" error={form.errores.descuento} ayuda="0 = sin promoción">
-              <input {...form.registrar('descuento')} type="number" min={0} max={90} inputMode="numeric" />
-            </Field>
-          </fieldset>
+          <Field id={form.id('precio')} label="Precio de lista (ARS)" error={form.errores.precio}>
+            <input {...form.registrar('precio')} type="number" min={1} step={100} inputMode="numeric" required />
+          </Field>
 
           <p className="check">
             <input type="checkbox" {...form.registrarCheckbox('enStock')} />
             <label htmlFor={form.id('enStock')}>Stock disponible para entrega inmediata</label>
-          </p>
-          <p className="check">
-            <input type="checkbox" {...form.registrarCheckbox('tendencia')} />
-            <label htmlFor={form.id('tendencia')}>Destacar en "En tendencia"</label>
           </p>
 
           <Field

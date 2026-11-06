@@ -6,17 +6,20 @@ interface ImagePlaceholderProps {
   className?: string;
   /** true cuando la imagen repite información que ya está en texto (ej.: dentro de una tarjeta). */
   decorativa?: boolean;
+  /** imagenUrl del producto (missl-api). Si es null se muestra el lugar reservado con el texto. */
+  imagenUrl?: string | null;
   children?: ReactNode;
 }
 
-/**
- * Lugar reservado para una foto. Con fotos reales va un <img alt="..."> dentro del <figure>
- * (o alt="" si es decorativa).
- */
-export function ImagePlaceholder({ texto, className = '', decorativa = false, children }: ImagePlaceholderProps) {
+/** Foto del producto, o un lugar reservado con rayas mientras el backend no tenga imagen cargada. */
+export function ImagePlaceholder({ texto, className = '', decorativa = false, imagenUrl, children }: ImagePlaceholderProps) {
   return (
     <figure className={`${styles.ph} ${className}`} aria-hidden={decorativa || undefined}>
-      <figcaption>{texto}</figcaption>
+      {imagenUrl ? (
+        <img src={imagenUrl} alt={decorativa ? '' : texto} loading="lazy" className={styles.img} />
+      ) : (
+        <figcaption>{texto}</figcaption>
+      )}
       {children}
     </figure>
   );

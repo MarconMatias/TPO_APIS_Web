@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CATEGORIAS, LISTA_CATEGORIAS } from '../../data/catalogo';
+import { CATEGORIAS, LISTA_CATEGORIAS } from '../../constants/negocio';
 import styles from './Footer.module.scss';
 
 const PREGUNTAS = [
@@ -32,7 +32,7 @@ export function Footer() {
         <ul>
           {LISTA_CATEGORIAS.map((cat) => (
             <li key={cat}>
-              <Link to={`/catalogo/${cat}`}>{CATEGORIAS[cat].label}</Link>
+              <Link to={`/catalogo/${CATEGORIAS[cat].slug}`}>{CATEGORIAS[cat].label}</Link>
             </li>
           ))}
           <li>

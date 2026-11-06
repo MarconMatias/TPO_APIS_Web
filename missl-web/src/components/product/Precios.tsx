@@ -1,5 +1,5 @@
-import type { Producto } from '../../types';
-import { formatPrecio, precioFinal } from '../../util/precio';
+import type { Producto } from '../../types/producto';
+import { formatPrecio } from '../../util/precio';
 
 interface PreciosProps {
   producto: Producto;
@@ -8,23 +8,22 @@ interface PreciosProps {
   conBadge?: boolean;
 }
 
-/** <data> guarda el valor numérico; <s> marca el precio anterior que ya no vale. */
+/** <data> guarda el valor numérico; <s> marca el precio anterior. precioFinal y promo los calcula el backend. */
 export function Precios({ producto, className = '', conBadge = false }: PreciosProps) {
-  const final = precioFinal(producto);
-  const { descuento } = producto;
+  const { precio, precioFinal, promoActiva, promoPct } = producto;
 
   return (
     <p className={`prices num ${className}`}>
-      <data value={Math.round(final)}>{formatPrecio(final)}</data>
-      {descuento > 0 && (
+      <data value={Math.round(precioFinal)}>{formatPrecio(precioFinal)}</data>
+      {promoActiva && (
         <>
           <s>
             <span className="sr-only">Precio anterior: </span>
-            {formatPrecio(producto.precio)}
+            {formatPrecio(precio)}
           </s>
           <span className={conBadge ? 'badge solid' : 'sr-only'}>
-            <span aria-hidden="true">−{descuento}%</span>
-            <span className="sr-only">{descuento}% de descuento</span>
+            <span aria-hidden="true">−{promoPct}%</span>
+            <span className="sr-only">{promoPct}% de descuento</span>
           </span>
         </>
       )}

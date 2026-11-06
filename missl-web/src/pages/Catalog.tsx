@@ -1,43 +1,44 @@
 import { useMemo } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { productosApi } from '../api/productosApi';
 import { ProductGrid } from '../components/product/ProductGrid';
+import { Cargando, ErrorDeCarga } from '../components/ui/Carga';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
-import { CATEGORIAS, esCategoria } from '../data/catalogo';
+import { CATEGORIAS, categoriaPorSlug } from '../constants/negocio';
+import { useApi } from '../hooks/useApi';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { useProductStore } from '../store/productStore';
-import { esOrden, OPCIONES_ORDEN, ordenarProductos } from '../util/orden';
+import { esOrden, OPCIONES_ORDEN } from '../util/orden';
 import styles from './Catalog.module.scss';
 import { NotFound } from './NotFound';
 
 /**
  * Catálogo general, por categoría (/catalogo/:categoria) o solo stock (/entrega-inmediata).
+ * Categoría, stock y orden se resuelven en el backend (GET /productos?categoria=&stock=&orden=);
+ * la marca se filtra acá para poder mostrar todas las marcas disponibles como chips.
  * Marca y orden viven en la URL (?marca=&orden=): se pueden compartir y sobreviven al "atrás".
  */
 export function Catalog({ soloStock = false }: { soloStock?: boolean }) {
   const { categoria: slug } = useParams<{ categoria?: string }>();
   const [params, setParams] = useSearchParams();
-  const productos = useProductStore((s) => s.productos);
 
-  const categoria = esCategoria(slug) ? slug : null;
+  const categoria = categoriaPorSlug(slug);
   const ordenParam = params.get('orden');
   const orden = esOrden(ordenParam) ? ordenParam : 'destacados';
 
-  const alcance = useMemo(
-    () => productos.filter((p) => (!soloStock || p.enStock) && (!categoria || p.categoria === categoria)),
-    [productos, soloStock, categoria],
+  const { datos, cargando, error, recargar } = useApi(
+    () => productosApi.listar({ categoria, stock: soloStock, orden }),
+    [categoria, soloStock, orden],
   );
+  const alcance = useMemo(() => datos ?? [], [datos]);
+
   const marcas = useMemo(
     () => [...new Set(alcance.map((p) => p.marca))].sort((a, b) => a.localeCompare(b, 'es')),
     [alcance],
   );
   const marcaParam = params.get('marca');
   const marca = marcaParam && marcas.includes(marcaParam) ? marcaParam : null;
-
-  const resultado = useMemo(
-    () => ordenarProductos(marca ? alcance.filter((p) => p.marca === marca) : alcance, orden),
-    [alcance, marca, orden],
-  );
+  const resultado = useMemo(() => (marca ? alcance.filter((p) => p.marca === marca) : alcance), [alcance, marca]);
 
   const titulo = soloStock ? 'Entrega inmediata' : categoria ? CATEGORIAS[categoria].label : 'Todo el catálogo';
   useDocumentTitle(titulo);
@@ -79,10 +80,15 @@ export function Catalog({ soloStock = false }: { soloStock?: boolean }) {
 
         <p className={styles.orden}>
           <output className="num" aria-live="polite">
-            {resultado.length} {resultado.length === 1 ? 'producto' : 'productos'}
+            {datos ? `${resultado.length} ${resultado.length === 1 ? 'producto' : 'productos'}` : ''}
           </output>
           <label htmlFor="orden" className="eyebrow">Ordenar</label>
-          <select id="orden" className="select" value={orden} onChange={(e) => actualizarFiltro('orden', e.target.value === 'destacados' ? null : e.target.value)}>
+          <select
+            id="orden"
+            className="select"
+            value={orden}
+            onChange={(e) => actualizarFiltro('orden', e.target.value === 'destacados' ? null : e.target.value)}
+          >
             {OPCIONES_ORDEN.map((o) => (
               <option key={o.valor} value={o.valor}>{o.label}</option>
             ))}
@@ -90,8 +96,12 @@ export function Catalog({ soloStock = false }: { soloStock?: boolean }) {
         </p>
       </form>
 
-      {resultado.length > 0 ? (
-        <section className="band" aria-labelledby="resultados-titulo">
+      {error ? (
+        <ErrorDeCarga error={error} onReintentar={recargar} titulo="No pudimos cargar el catálogo" />
+      ) : !datos ? (
+        <Cargando texto="Cargando catálogo…" />
+      ) : resultado.length > 0 ? (
+        <section className="band" aria-labelledby="resultados-titulo" aria-busy={cargando}>
           <h2 id="resultados-titulo" className="sr-only">Resultados</h2>
           <ProductGrid productos={resultado} />
         </section>

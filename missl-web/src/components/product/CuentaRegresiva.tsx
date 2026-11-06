@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { useClockStore } from '../../store/clockStore';
 import { duracionIso, formatCuentaRegresiva } from '../../util/cuentaRegresiva';
 
-/** Cuenta regresiva viva hasta `fin` (epoch ms). No es región aria-live a propósito: anunciaría cada segundo. */
-export function CuentaRegresiva({ fin, className }: { fin: number; className?: string }) {
+/**
+ * Cuenta regresiva viva a partir de promoRestanteMs (missl-api). El fin se fija una sola vez al montar.
+ * No es región aria-live a propósito: anunciaría cada segundo.
+ */
+export function CuentaRegresiva({ restanteMs, className }: { restanteMs: number; className?: string }) {
+  const [fin] = useState(() => Date.now() + restanteMs);
   const ahora = useClockStore((s) => s.ahora);
   const restante = fin - ahora;
   return (

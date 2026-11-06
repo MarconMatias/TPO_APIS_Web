@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { EmptyState } from '../components/ui/EmptyState';
+import { MEDIOS_PAGO } from '../constants/negocio';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useOrderStore } from '../store/orderStore';
 import { formatPrecio } from '../util/precio';
 import styles from './Confirmation.module.scss';
 
-/** Paso 3: comprobante del pedido recién pagado. */
+/** Paso 3: comprobante con la ConfirmacionDTO que devolvió POST /ventas. */
 export function Confirmation() {
   useDocumentTitle('Compra confirmada');
   const pedido = useOrderStore((s) => s.ultimoPedido);
@@ -18,6 +19,8 @@ export function Confirmation() {
     );
   }
 
+  const { confirmacion: c, lineas, domicilio } = pedido;
+
   return (
     <section className={`${styles.confirm} band`} aria-labelledby="h-confirmacion">
       <hgroup>
@@ -26,35 +29,42 @@ export function Confirmation() {
         </p>
         <h1 id="h-confirmacion">Gracias por tu compra.</h1>
       </hgroup>
-      <p>Te enviamos el comprobante a {pedido.email}. Podés seguir el estado del pedido desde tu cuenta.</p>
+      <p>
+        Te enviamos el comprobante a {c.emailCliente} y avisamos al equipo de ventas ({c.emailAdminNotificado}). Las
+        compras confirmadas no admiten cancelación.
+      </p>
 
       <dl className={`${styles.kv} num`}>
         <dt>Pedido</dt>
-        <dd>{pedido.codigo}</dd>
+        <dd>{c.codigo}</dd>
+        <dt>Estado</dt>
+        <dd>{c.estado === 'PENDIENTE' ? 'Pendiente de entrega' : 'Entregado'}</dd>
         <dt>Productos</dt>
         <dd>
           <ul>
-            {pedido.lineas.map((l) => (
+            {lineas.map((l) => (
               <li key={`${l.nombre}-${l.talle}`}>
                 {l.nombre} · talle {l.talle} × {l.cantidad}
               </li>
             ))}
           </ul>
         </dd>
-        {pedido.descuento > 0 && (
+        <dt>Subtotal</dt>
+        <dd>{formatPrecio(c.subtotal)}</dd>
+        {c.descuento > 0 && (
           <>
-            <dt>Descuento</dt>
-            <dd>− {formatPrecio(pedido.descuento)}</dd>
+            <dt>Descuento de bienvenida</dt>
+            <dd>− {formatPrecio(c.descuento)}</dd>
           </>
         )}
         <dt>Total</dt>
-        <dd>{formatPrecio(pedido.total)}</dd>
+        <dd>{formatPrecio(c.total)}</dd>
         <dt>Medio de pago</dt>
-        <dd>{pedido.medioPago}</dd>
+        <dd>{MEDIOS_PAGO[c.medioPago]?.label ?? c.medioPago}</dd>
         <dt>Envío a</dt>
-        <dd>{pedido.direccion}</dd>
+        <dd>{domicilio}</dd>
         <dt>Entrega estimada</dt>
-        <dd>{pedido.entregaEstimada}</dd>
+        <dd>{c.entregaEstimada}</dd>
       </dl>
 
       <p className={styles.botones}>

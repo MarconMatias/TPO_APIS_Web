@@ -1,5 +1,5 @@
-import { CATEGORIAS, TABLAS_TALLES } from '../../data/catalogo';
-import type { Categoria } from '../../types';
+import { CATEGORIAS, TABLAS_TALLES } from '../../constants/negocio';
+import type { Categoria } from '../../types/producto';
 
 /** Guía de talles como tabla real (nunca imagen), con encabezados de columna y de fila. */
 export function TablaTalles({ categoria }: { categoria: Categoria }) {

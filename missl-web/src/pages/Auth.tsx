@@ -1,23 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Field } from '../components/ui/Field';
 import { FormAlert } from '../components/ui/FormAlert';
-import { DESCUENTO_REGISTRO_PCT, USUARIO_DEMO } from '../data/catalogo';
+import { DESCUENTO_REGISTRO_PCT } from '../constants/negocio';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useForm } from '../hooks/useForm';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
-import type { Usuario } from '../types';
+import type { Cliente } from '../types/cliente';
 import * as v from '../util/validacion';
 import styles from './Auth.module.scss';
 
 type Modo = 'registro' | 'ingreso';
 
-/** /cuenta: registro e ingreso; con sesión iniciada muestra los datos de la cuenta. */
+/** /cuenta: registro (POST /auth/registro) e ingreso (POST /auth/login); con sesión muestra la cuenta. */
 export function Auth() {
-  const usuario = useAuthStore((s) => s.usuario);
-  return usuario ? <MiCuenta usuario={usuario} /> : <Acceso />;
+  const cliente = useAuthStore((s) => s.cliente);
+  return cliente ? <MiCuenta cliente={cliente} /> : <Acceso />;
 }
 
 function Acceso() {
@@ -33,6 +33,7 @@ function Acceso() {
   const esRegistro = modo === 'registro';
   useDocumentTitle(esRegistro ? 'Crear cuenta' : 'Ingresar');
 
+  // Mismas reglas que las anotaciones de ClienteRegistroRequest en missl-api (el backend vuelve a validar).
   const form = useForm({
     inicial: { nombre: '', email: '', password: '', confirmar: '' },
     validar: (valores) =>
@@ -61,19 +62,14 @@ function Acceso() {
 
   const onSubmit = form.enviar(async ({ nombre, email, password }) => {
     if (esRegistro) {
-      await registrar({ nombre, email, password });
-      mostrarAviso(`Cuenta creada · ${DESCUENTO_REGISTRO_PCT}% aplicado a tu primera compra`);
+      await registrar({ nombre: nombre.trim(), email: email.trim(), password });
+      mostrarAviso(`Cuenta creada · ${DESCUENTO_REGISTRO_PCT}% de descuento en tu primera compra`);
     } else {
-      const usuario = await ingresar({ email, password });
-      mostrarAviso(`Hola de nuevo, ${usuario.nombre.split(' ')[0]}`);
+      const cliente = await ingresar({ email: email.trim(), password });
+      mostrarAviso(`Hola de nuevo, ${cliente.nombre.split(' ')[0]}`);
     }
     navigate(destino);
   });
-
-  const usarCuentaDemo = () => {
-    form.cambiar('email', USUARIO_DEMO.email);
-    form.cambiar('password', USUARIO_DEMO.password);
-  };
 
   return (
     <section className={`${styles.auth} band`} aria-labelledby="auth-titulo">
@@ -95,18 +91,18 @@ function Acceso() {
         </li>
       </menu>
 
-      {esRegistro ? (
-        <p className={styles.perk}>
-          Al registrarte se aplica un <strong>{DESCUENTO_REGISTRO_PCT}% de descuento</strong> en tu primera compra.
-        </p>
-      ) : (
-        <p className={styles.perk}>
-          Cuenta de prueba: <strong>{USUARIO_DEMO.email}</strong> / <strong>{USUARIO_DEMO.password}</strong>{' '}
-          <button type="button" className="link-btn" onClick={usarCuentaDemo}>Completar</button>
-        </p>
-      )}
+      <p className={styles.perk}>
+        {esRegistro ? (
+          <>
+            Para comprar necesitás una cuenta. Al registrarte se aplica un{' '}
+            <strong>{DESCUENTO_REGISTRO_PCT}% de descuento</strong> en tu primera compra.
+          </>
+        ) : (
+          'Ingresá con el email y la contraseña de tu cuenta MISSL.'
+        )}
+      </p>
 
-      <form onSubmit={onSubmit} noValidate>
+      <form onSubmit={onSubmit} noValidate aria-busy={form.enviando}>
         {esRegistro && (
           <Field id={form.id('nombre')} label="Nombre y apellido" error={form.errores.nombre}>
             <input {...form.registrar('nombre')} autoComplete="name" placeholder="Camila Duarte" required />
@@ -152,11 +148,19 @@ function Acceso() {
   );
 }
 
-function MiCuenta({ usuario }: { usuario: Usuario }) {
+function MiCuenta({ cliente }: { cliente: Cliente }) {
   useDocumentTitle('Mi cuenta');
   const navigate = useNavigate();
   const salir = useAuthStore((s) => s.salir);
+  const refrescarPerfil = useAuthStore((s) => s.refrescarPerfil);
   const mostrarAviso = useToastStore((s) => s.mostrar);
+
+  // GET /auth/me: trae el estado actualizado de la cuenta (ej.: si ya usó el descuento).
+  useEffect(() => {
+    refrescarPerfil().catch(() => {
+      /* Si el token venció, el cliente HTTP ya cerró la sesión y avisó. */
+    });
+  }, [refrescarPerfil]);
 
   const cerrarSesion = () => {
     salir();
@@ -168,15 +172,19 @@ function MiCuenta({ usuario }: { usuario: Usuario }) {
     <section className={`${styles.auth} band`} aria-labelledby="cuenta-titulo">
       <hgroup>
         <p className="eyebrow">Cuenta MISSL</p>
-        <h1 id="cuenta-titulo">Hola, {usuario.nombre.split(' ')[0]}</h1>
+        <h1 id="cuenta-titulo">Hola, {cliente.nombre.split(' ')[0]}</h1>
       </hgroup>
       <dl className={styles.datos}>
         <dt>Nombre</dt>
-        <dd>{usuario.nombre}</dd>
+        <dd>{cliente.nombre}</dd>
         <dt>Email</dt>
-        <dd>{usuario.email}</dd>
-        <dt>Descuento de registro</dt>
-        <dd>{usuario.primeraCompraUsada ? 'Ya usado en tu primera compra' : `${DESCUENTO_REGISTRO_PCT}% disponible para tu primera compra`}</dd>
+        <dd>{cliente.email}</dd>
+        <dt>Descuento de bienvenida</dt>
+        <dd>
+          {cliente.descuentoRegistroUsado
+            ? 'Ya usado en tu primera compra'
+            : `${DESCUENTO_REGISTRO_PCT}% disponible para tu primera compra`}
+        </dd>
       </dl>
       <p className={styles.acciones}>
         <Link to="/catalogo" className="btn">Seguir comprando</Link>

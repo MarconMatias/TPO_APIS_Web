@@ -1,9 +1,4 @@
-/** Simula la latencia de una llamada al backend para poder mostrar estados de espera. */
-export function simularLatencia(ms = 900): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** Storage tolerante: en modo privado o con el almacenamiento bloqueado, localStorage puede tirar. */
+/** Storage tolerante: en modo privado o con el almacenamiento bloqueado, localStorage puede tirar error. */
 export function storageSeguro(tipo: 'local' | 'session'): Storage {
   try {
     const storage = tipo === 'local' ? window.localStorage : window.sessionStorage;

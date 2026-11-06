@@ -1,26 +1,30 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { productosApi } from '../api/productosApi';
 import { CuentaRegresiva } from '../components/product/CuentaRegresiva';
 import { ProductGrid } from '../components/product/ProductGrid';
+import { Cargando, ErrorDeCarga } from '../components/ui/Carga';
 import { ImagePlaceholder } from '../components/ui/ImagePlaceholder';
 import { Seccion } from '../components/ui/Seccion';
-import { CATEGORIAS, FIN_PROMOCION, LISTA_CATEGORIAS } from '../data/catalogo';
+import { CATEGORIAS, LISTA_CATEGORIAS } from '../constants/negocio';
+import { useApi } from '../hooks/useApi';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { useProductStore } from '../store/productStore';
 import styles from './Home.module.scss';
 
 const POR_SECCION = 4;
 
 export function Home() {
   useDocumentTitle('Zapatillas, indumentaria y carteras originales');
-  const productos = useProductStore((s) => s.productos);
+  // GET /productos: una sola lectura alimenta tendencias, promo y entrega inmediata.
+  const { datos, cargando, error, recargar } = useApi(() => productosApi.listar(), []);
+  const productos = useMemo(() => datos ?? [], [datos]);
 
-  const tendencia = useMemo(() => productos.filter((p) => p.tendencia).slice(0, POR_SECCION), [productos]);
+  const tendencia = useMemo(() => productos.filter((p) => p.esTendencia).slice(0, POR_SECCION), [productos]);
   const enStock = useMemo(
-    () => productos.filter((p) => p.enStock && !p.tendencia).slice(0, POR_SECCION),
+    () => productos.filter((p) => p.enStock && !p.esTendencia).slice(0, POR_SECCION),
     [productos],
   );
-  const promo = useMemo(() => productos.find((p) => p.descuento > 0), [productos]);
+  const promo = useMemo(() => productos.find((p) => p.promoActiva && p.promoRestanteMs !== null), [productos]);
 
   return (
     <>
@@ -40,23 +44,26 @@ export function Home() {
         <ImagePlaceholder texto="Foto editorial de portada" className={styles.foto} decorativa />
       </header>
 
+      {cargando && !datos && <Cargando texto="Cargando productos…" />}
+      {error && <ErrorDeCarga error={error} onReintentar={recargar} titulo="No pudimos cargar los productos" />}
+
       {tendencia.length > 0 && (
         <Seccion id="h-tendencia" titulo="En tendencia" enlace={{ to: '/catalogo', label: 'Ver todo' }}>
           <ProductGrid productos={tendencia} />
         </Seccion>
       )}
 
-      {promo && (
+      {promo && promo.promoRestanteMs !== null && (
         <aside className={`${styles.promo} band`} aria-labelledby="h-promo">
           <hgroup>
             <p className="eyebrow">Promoción activa</p>
             <h2 id="h-promo">
-              {promo.marca} {promo.nombre} con {promo.descuento}% off
+              {promo.marca} {promo.nombre} con {promo.promoPct}% off
             </h2>
           </hgroup>
           <p className={styles.timer}>
             <span className="eyebrow">Termina en</span>
-            <CuentaRegresiva fin={FIN_PROMOCION} />
+            <CuentaRegresiva key={promo.id} restanteMs={promo.promoRestanteMs} />
           </p>
           <Link to={`/producto/${promo.id}`} className="btn">
             Ver producto<span className="sr-only">: {promo.nombre}</span>
@@ -74,7 +81,7 @@ export function Home() {
         <ul className={styles.categorias}>
           {LISTA_CATEGORIAS.map((cat) => (
             <li key={cat}>
-              <Link to={`/catalogo/${cat}`}>
+              <Link to={`/catalogo/${CATEGORIAS[cat].slug}`}>
                 <ImagePlaceholder texto={CATEGORIAS[cat].label} className={styles.catFoto} decorativa />
                 <h3>
                   {CATEGORIAS[cat].label} <span aria-hidden="true">→</span>

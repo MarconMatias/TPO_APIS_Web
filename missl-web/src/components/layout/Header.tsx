@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { CATEGORIAS, LISTA_CATEGORIAS } from '../../data/catalogo';
+import { CATEGORIAS, LISTA_CATEGORIAS } from '../../constants/negocio';
 import { useAuthStore } from '../../store/authStore';
 import { selectCantidadTotal, useCartStore } from '../../store/cartStore';
 import styles from './Header.module.scss';
@@ -7,7 +7,7 @@ import styles from './Header.module.scss';
 /** Barra de aviso + header fijo con navegación de categorías y de cuenta. NavLink marca aria-current="page". */
 export function Header() {
   const cantidad = useCartStore(selectCantidadTotal);
-  const usuario = useAuthStore((s) => s.usuario);
+  const cliente = useAuthStore((s) => s.cliente);
 
   return (
     <>
@@ -23,7 +23,7 @@ export function Header() {
           <ul>
             {LISTA_CATEGORIAS.map((cat) => (
               <li key={cat}>
-                <NavLink to={`/catalogo/${cat}`}>{CATEGORIAS[cat].label}</NavLink>
+                <NavLink to={`/catalogo/${CATEGORIAS[cat].slug}`}>{CATEGORIAS[cat].label}</NavLink>
               </li>
             ))}
             <li>
@@ -41,7 +41,7 @@ export function Header() {
               <NavLink to="/admin">Admin</NavLink>
             </li>
             <li>
-              <NavLink to="/cuenta">{usuario ? usuario.nombre.split(' ')[0] : 'Ingresar'}</NavLink>
+              <NavLink to="/cuenta">{cliente ? cliente.nombre.split(' ')[0] : 'Ingresar'}</NavLink>
             </li>
             <li>
               <NavLink to="/carrito" className={styles.cart}>

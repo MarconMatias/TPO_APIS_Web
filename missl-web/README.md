@@ -1,50 +1,65 @@
 # MISSL · Frontend
 
-Frontend de MISSL (e-commerce de zapatillas, indumentaria y carteras originales) hecho en React a partir de `../missl-mockup.html`.
+Frontend de MISSL (e-commerce de zapatillas, indumentaria y carteras originales) en React. Es un repositorio independiente que consume **missl-api** (Spring Boot) por HTTP/REST.
 
-Stack: React 19 + TypeScript + Vite, React Router, Zustand y SCSS Modules. Usa datos simulados: en esta etapa no se conecta con missl-api.
+Stack: React 19 + TypeScript + Vite, React Router, Zustand y SCSS Modules.
 
 ## Cómo correrlo
 
+1. Levantar missl-api (puerto 8080). Su `missl.cors.allowed-origin` tiene que incluir `http://localhost:4200`.
+2. Instalar y arrancar el front:
+
 ```bash
+cp .env.example .env   # opcional: VITE_API_URL, por defecto http://localhost:8080/api
 npm install
-npm run dev       # http://localhost:4200
-npm run build     # chequeo de tipos + build de producción
+npm run dev            # http://localhost:4200
+npm run build          # chequeo de tipos + build de producción
 npm run lint
 ```
 
-Cuenta de prueba: `demo@missl.com.ar` / `missl2026`. También se puede crear una cuenta nueva desde **Ingresar**.
+### Cuentas de prueba (cargadas por las migraciones de missl-api)
 
-## Vistas
+| Rol | Email | Contraseña | Notas |
+| --- | --- | --- | --- |
+| Cliente | `demo@missl.com.ar` | `missl2026` | Descuento de bienvenida sin usar (se consume con la primera compra) |
+| Cliente | `camila.duarte@gmail.com` | `missl2026` | Descuento ya usado |
+| Admin | `admin@missl.com.ar` | `missl2026` | 2FA: cargar el secreto TOTP `IWSTKBSLPAMCBUTFDQMNNS63VEBYIFSI` en Google Authenticator o Authy |
 
-| Ruta | Vista |
-| --- | --- |
-| `/` | Inicio: hero, en tendencia, promoción con cuenta regresiva, entrega inmediata y categorías |
-| `/catalogo`, `/catalogo/:categoria`, `/entrega-inmediata` | Catálogo con filtro por marca y orden (los dos quedan en la URL) |
-| `/producto/:id` | Ficha: galería, elección de talle, guía de talles y productos relacionados |
-| `/carrito` | Carrito con cantidades y resumen |
-| `/cuenta` | Registro o ingreso; con sesión iniciada muestra los datos de la cuenta |
-| `/checkout` | Envío y pago simulado (pide sesión iniciada) |
-| `/confirmacion` | Comprobante del pedido |
-| `/admin` | ABM de productos con búsqueda y diálogos modales |
-| `/nosotros` | La compañía e integrantes |
+## Integración con missl-api
+
+| Vista | Endpoint | Sesión |
+| --- | --- | --- |
+| Inicio, catálogo, carrito | `GET /productos?categoria=&stock=&orden=` | — |
+| Ficha de producto | `GET /productos/{id}` (talles con stock y sugeridos) | — |
+| Registro / ingreso | `POST /auth/registro`, `POST /auth/login` | — |
+| Mi cuenta | `GET /auth/me` | Cliente |
+| Checkout | `POST /ventas` | Cliente |
+| Admin, paso 1 y paso 2 | `POST /admin/login`, `POST /admin/2fa` | — |
+| Panel de administración | `GET/POST/PUT/DELETE /admin/productos`, `GET /admin/productos/promociones`, `PATCH /admin/productos/{id}/promocion` | Admin |
+
+- **No hay compra como invitado:** para comprar hace falta una cuenta. El backend toma al cliente del JWT, no del body.
+- **Tipos:** `src/types/` replica los DTO de missl-api con los mismos nombres de campos.
+- **Errores:** todo pasa por `src/api/client.ts`. Las respuestas de error (`ApiError`: `status` + `mensajes`) se muestran en los formularios o en un estado de error con "Reintentar". Un 401 con token cierra la sesión vencida.
+- **Lo que queda en el navegador:** el carrito (solo id, talle y cantidad; precios y descuentos los da la API) y los tokens. La sesión de cliente se guarda en `localStorage` y la de admin en `sessionStorage`.
 
 ## Estructura
 
 ```
 src/
-  components/  layout (Header, Footer, Toast), ui (Field, Modal, PageHeader…), product, cart, admin
-  pages/       una vista por ruta, cada una con su .module.scss
-  store/       estado global con Zustand (productos, carrito, sesión, pedido, avisos)
-  hooks/       useForm (validación accesible), useCarrito, useDocumentTitle
-  data/        catálogo de ejemplo y constantes del negocio
-  util/        precios, orden, validaciones, latencia simulada
-  styles/      tokens, reset y primitivas globales (botones, campos, badges)
+  api/         client.ts (fetch + JWT + errores) y un módulo por recurso: productosApi, authApi, ventasApi, adminApi
+  types/       espejo de los DTO de missl-api
+  store/       Zustand: sesión de cliente, sesión de admin (2FA), carrito, último pedido, avisos
+  hooks/       useApi (carga/error/reintentar), useCarrito, useForm (validación accesible), useDocumentTitle
+  routes/      RequireAuth (checkout) y AdminProtectedRoute (panel)
+  pages/       una vista por ruta; pages/admin con login, 2FA y panel
+  components/  layout, ui, product, cart, admin
+  constants/   etiquetas de categorías y medios de pago, guía de talles (contenido fijo, no datos)
+  styles/      tokens, reset y primitivas globales
 ```
 
-## Decisiones
+## Accesibilidad y semántica
 
-- **Sin `<div>`:** React se monta directamente sobre `<body>` y todo el marcado usa elementos semánticos (`header`, `nav`, `main`, `section`, `article`, `aside`, `figure`, `dl`, `menu`, `dialog`, `output`, `data`, `time`).
-- **Accesibilidad:** enlace para saltar al contenido, `aria-current` en la navegación, foco al contenido al cambiar de vista, un solo `h1` por vista, errores asociados con `aria-describedby`, foco en el primer campo inválido, avisos en una región `role="status"`, modales nativos con `<dialog>` y contraste AA.
-- **Estados:** los guardados simulan latencia para mostrar estados de espera ("Procesando pago…", "Guardando…"), de error (validación y credenciales incorrectas), de éxito (avisos) y de vacío (carrito, filtros, 404).
-- **Persistencia:** carrito, sesión y productos se guardan en `localStorage` (con un respaldo en memoria si el navegador lo bloquea).
+- Sin ningún `<div>`: React se monta directamente sobre `<body>`.
+- Enlace para saltar al contenido, `aria-current` en la navegación y foco al contenido al cambiar de vista.
+- Errores asociados a cada campo con `aria-describedby`, foco en el primer campo inválido y avisos en `role="status"`.
+- Modales nativos con `<dialog>` y contraste AA.

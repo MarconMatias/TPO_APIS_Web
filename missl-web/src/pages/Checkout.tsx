@@ -1,37 +1,35 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ResumenPedido } from '../components/cart/ResumenPedido';
+import { Cargando, ErrorDeCarga } from '../components/ui/Carga';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Field } from '../components/ui/Field';
 import { FormAlert } from '../components/ui/FormAlert';
 import { PageHeader } from '../components/ui/PageHeader';
+import { MEDIOS_PAGO } from '../constants/negocio';
 import { useCarrito } from '../hooks/useCarrito';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useForm } from '../hooks/useForm';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useOrderStore } from '../store/orderStore';
-import type { MedioPago } from '../types';
+import type { MedioPago } from '../types/venta';
 import { formatPrecio } from '../util/precio';
 import * as v from '../util/validacion';
 import styles from './Checkout.module.scss';
 
-const MEDIOS_PAGO: { valor: MedioPago; ayuda: string }[] = [
-  { valor: 'Mercado Pago', ayuda: 'Dinero en cuenta o débito vinculado' },
-  { valor: 'Tarjeta de débito', ayuda: 'Procesado por la API de pagos, sin cuotas' },
-  { valor: 'Transferencia bancaria', ayuda: 'CBU enviado por email, acredita en 24 h' },
-];
+const LISTA_MEDIOS = Object.keys(MEDIOS_PAGO) as MedioPago[];
 
-/** Paso 2 de la compra. Ruta protegida por RequireAuth: siempre hay usuario. */
+/** Paso 2 de la compra → POST /ventas con el JWT del cliente. Ruta protegida por RequireAuth. */
 export function Checkout() {
   useDocumentTitle('Envío y pago');
   const navigate = useNavigate();
-  const { lineas, totales, usuario } = useCarrito();
-  const confirmarPago = useOrderStore((s) => s.confirmarPago);
+  const { lineas, totales, cliente, hayItems, cargando, error, recargar } = useCarrito();
+  const confirmarCompra = useOrderStore((s) => s.confirmarCompra);
   const vaciarCarrito = useCartStore((s) => s.vaciar);
-  const registrarCompra = useAuthStore((s) => s.registrarCompra);
+  const refrescarPerfil = useAuthStore((s) => s.refrescarPerfil);
 
   const form = useForm({
-    inicial: { direccion: '', localidad: '', telefono: '', pago: 'Mercado Pago' as string },
+    inicial: { direccion: '', localidad: '', telefono: '', pago: 'MERCADOPAGO' as string },
     validar: (valores) =>
       v.limpiarErrores({
         direccion: v.largoMinimo(valores.direccion, 5, 'Ingresá la dirección de entrega (calle, número y piso).'),
@@ -40,7 +38,7 @@ export function Checkout() {
       }),
   });
 
-  if (lineas.length === 0 || !usuario) {
+  if (!hayItems || !cliente) {
     return (
       <EmptyState nivel="h1" titulo="No hay productos para pagar" texto="Tu carrito está vacío. Agregá productos para iniciar la compra.">
         <Link to="/catalogo" className="btn">Ver catálogo</Link>
@@ -48,22 +46,20 @@ export function Checkout() {
     );
   }
 
-  const onSubmit = form.enviar(async ({ direccion, localidad, pago }) => {
-    await confirmarPago({
-      lineas: lineas.map((l) => ({ nombre: l.producto.nombre, talle: l.talle, cantidad: l.cantidad, subtotal: l.subtotal })),
-      subtotal: totales.subtotal,
-      descuento: totales.descuento,
-      total: totales.total,
-      medioPago: pago as MedioPago,
-      direccion: `${direccion.trim()}, ${localidad.trim()}`,
-      email: usuario.email,
-      entregaEstimada: lineas.some((l) => !l.producto.enStock)
-        ? '3 semanas (incluye modelos por encargo)'
-        : '24 a 72 horas (stock disponible)',
-    });
+  const onSubmit = form.enviar(async ({ direccion, localidad, telefono, pago }) => {
+    await confirmarCompra(
+      {
+        items: lineas.map((l) => ({ productoId: l.productoId, talle: l.talle, cantidad: l.cantidad })),
+        medioPago: pago as MedioPago,
+        domicilio: `${direccion.trim()}, ${localidad.trim()}`,
+        telefono: telefono.trim(),
+      },
+      lineas.map((l) => ({ nombre: l.producto.nombre, talle: l.talle, cantidad: l.cantidad })),
+    );
     vaciarCarrito();
-    registrarCompra();
     navigate('/confirmacion');
+    // El backend marcó el descuento de bienvenida como usado: se actualiza la cuenta en segundo plano.
+    refrescarPerfil().catch(() => {});
   });
 
   return (
@@ -76,50 +72,57 @@ export function Checkout() {
         </ol>
       </PageHeader>
 
-      <section className={`${styles.layout} band`} aria-label="Datos de la compra">
-        <form className={styles.form} onSubmit={onSubmit} noValidate aria-busy={form.enviando}>
-          <fieldset disabled={form.enviando}>
-            <legend>Datos de envío</legend>
-            <Field id={form.id('direccion')} label="Dirección" error={form.errores.direccion}>
-              <input {...form.registrar('direccion')} autoComplete="street-address" placeholder="Av. Corrientes 1234, 5° B" required />
-            </Field>
-            <Field id={form.id('localidad')} label="Localidad y provincia" error={form.errores.localidad}>
-              <input {...form.registrar('localidad')} autoComplete="address-level2" placeholder="CABA, Buenos Aires" required />
-            </Field>
-            <Field id={form.id('telefono')} label="Teléfono" error={form.errores.telefono} ayuda="Te escribimos por WhatsApp para coordinar la entrega.">
-              <input {...form.registrar('telefono')} type="tel" autoComplete="tel" inputMode="tel" placeholder="11 5555-1234" required />
-            </Field>
-          </fieldset>
+      {error ? (
+        <ErrorDeCarga error={error} onReintentar={recargar} titulo="No pudimos cargar tu pedido" />
+      ) : cargando ? (
+        <Cargando texto="Preparando tu pedido…" />
+      ) : (
+        <section className={`${styles.layout} band`} aria-label="Datos de la compra">
+          <form className={styles.form} onSubmit={onSubmit} noValidate aria-busy={form.enviando}>
+            <fieldset disabled={form.enviando}>
+              <legend>Datos de envío</legend>
+              <Field id={form.id('direccion')} label="Dirección" error={form.errores.direccion}>
+                <input {...form.registrar('direccion')} autoComplete="street-address" placeholder="Av. Corrientes 1234, 5° B" required />
+              </Field>
+              <Field id={form.id('localidad')} label="Localidad y provincia" error={form.errores.localidad}>
+                <input {...form.registrar('localidad')} autoComplete="address-level2" placeholder="CABA, Buenos Aires" required />
+              </Field>
+              <Field id={form.id('telefono')} label="Teléfono" error={form.errores.telefono} ayuda="Te escribimos por WhatsApp para coordinar la entrega.">
+                <input {...form.registrar('telefono')} type="tel" autoComplete="tel" inputMode="tel" placeholder="11 5555-1234" required />
+              </Field>
+            </fieldset>
 
-          <fieldset disabled={form.enviando}>
-            <legend>Medio de pago</legend>
-            {MEDIOS_PAGO.map((medio) => (
-              <label key={medio.valor} className={styles.payOpt}>
-                <input
-                  type="radio"
-                  name="pago"
-                  value={medio.valor}
-                  checked={form.valores.pago === medio.valor}
-                  onChange={() => form.cambiar('pago', medio.valor)}
-                />
-                <span>
-                  <strong>{medio.valor}</strong>
-                  <small>{medio.ayuda}</small>
-                </span>
-              </label>
-            ))}
-            <p className="note">No operamos con tarjetas de crédito ni cuotas. Esta es una simulación: no se realiza ningún cobro.</p>
-          </fieldset>
+            <fieldset disabled={form.enviando}>
+              <legend>Medio de pago</legend>
+              {LISTA_MEDIOS.map((medio) => (
+                <label key={medio} className={styles.payOpt}>
+                  <input
+                    type="radio"
+                    name="pago"
+                    value={medio}
+                    checked={form.valores.pago === medio}
+                    onChange={() => form.cambiar('pago', medio)}
+                  />
+                  <span>
+                    <strong>{MEDIOS_PAGO[medio].label}</strong>
+                    <small>{MEDIOS_PAGO[medio].ayuda}</small>
+                  </span>
+                </label>
+              ))}
+              <p className="note">No operamos con tarjetas de crédito ni cuotas.</p>
+            </fieldset>
 
-          <FormAlert cantidadErrores={form.cantidadErrores} errorGeneral={form.errorGeneral} />
+            <FormAlert cantidadErrores={form.cantidadErrores} errorGeneral={form.errorGeneral} />
 
-          <button type="submit" className="btn block" disabled={form.enviando} aria-busy={form.enviando}>
-            {form.enviando ? 'Procesando pago…' : `Confirmar pago · ${formatPrecio(totales.total)}`}
-          </button>
-        </form>
+            <button type="submit" className="btn block" disabled={form.enviando} aria-busy={form.enviando}>
+              {form.enviando ? 'Procesando pago…' : `Confirmar pago · ${formatPrecio(totales.total)}`}
+            </button>
+            <p className="note">El importe final lo confirma el sistema al procesar el pago.</p>
+          </form>
 
-        <ResumenPedido lineas={lineas} totales={totales} usuario={usuario} conItems />
-      </section>
+          <ResumenPedido lineas={lineas} totales={totales} cliente={cliente} conItems />
+        </section>
+      )}
     </>
   );
 }

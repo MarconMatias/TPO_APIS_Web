@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Producto } from '../../types';
-import { etiquetaEntrega } from '../../util/precio';
+import type { Producto } from '../../types/producto';
 import { ImagePlaceholder } from '../ui/ImagePlaceholder';
 import { Precios } from './Precios';
 import styles from './ProductCard.module.scss';
@@ -10,9 +9,9 @@ export function ProductCard({ producto }: { producto: Producto }) {
   return (
     <article className={styles.card}>
       <Link to={`/producto/${producto.id}`}>
-        <ImagePlaceholder texto={producto.nombre} decorativa className={styles.foto}>
+        <ImagePlaceholder texto={producto.nombre} decorativa className={styles.foto} imagenUrl={producto.imagenUrl}>
           <span className={styles.badges}>
-            {producto.descuento > 0 && <span className="badge solid">−{producto.descuento}%</span>}
+            {producto.promoActiva && <span className="badge solid">−{producto.promoPct}%</span>}
             {producto.enStock && <span className="badge">En stock</span>}
           </span>
         </ImagePlaceholder>
@@ -21,7 +20,7 @@ export function ProductCard({ producto }: { producto: Producto }) {
           <h3>{producto.nombre}</h3>
         </hgroup>
         <Precios producto={producto} />
-        <p className={styles.meta}>{etiquetaEntrega(producto)}</p>
+        <p className={styles.meta}>{producto.deliveryLabel}</p>
       </Link>
     </article>
   );

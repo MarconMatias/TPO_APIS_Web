@@ -1,67 +1,46 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { USUARIO_DEMO } from '../data/catalogo';
-import type { Usuario } from '../types';
-import { simularLatencia, storageSeguro } from '../util/simular';
-
-/**
- * Cuentas simuladas en el navegador. Es solo para demostrar el flujo en esta etapa:
- * en la integración full stack la autenticación (y el hash de contraseñas) la resuelve missl-api.
- */
-interface Cuenta extends Usuario {
-  password: string;
-}
+import { authApi } from '../api/authApi';
+import type { Cliente, ClienteLoginRequest, ClienteRegistroRequest } from '../types/cliente';
+import { storageSeguro } from '../util/storage';
 
 interface AuthState {
-  cuentas: Cuenta[];
-  usuario: Usuario | null;
-  registrar: (datos: { nombre: string; email: string; password: string }) => Promise<Usuario>;
-  ingresar: (datos: { email: string; password: string }) => Promise<Usuario>;
+  /** JWT de rol CLIENTE emitido por missl-api. */
+  token: string | null;
+  cliente: Cliente | null;
+  registrar: (datos: ClienteRegistroRequest) => Promise<Cliente>;
+  ingresar: (datos: ClienteLoginRequest) => Promise<Cliente>;
+  /** Vuelve a pedir la cuenta (ej.: después de comprar, para saber si ya usó el 5%). */
+  refrescarPerfil: () => Promise<void>;
   salir: () => void;
-  /** Marca el descuento de primera compra como usado. */
-  registrarCompra: () => void;
 }
 
-const sinPassword = ({ password: _password, ...usuario }: Cuenta): Usuario => usuario;
-
+/** Sesión del cliente. Se persiste en localStorage para no pedir login en cada recarga. */
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      cuentas: [{ ...USUARIO_DEMO, primeraCompraUsada: false }],
-      usuario: null,
+    (set) => ({
+      token: null,
+      cliente: null,
 
-      registrar: async ({ nombre, email, password }) => {
-        await simularLatencia();
-        const normalizado = email.trim().toLowerCase();
-        if (get().cuentas.some((c) => c.email === normalizado)) {
-          throw new Error('Ya existe una cuenta con ese email. Probá ingresar con tu contraseña.');
-        }
-        const cuenta: Cuenta = { nombre: nombre.trim(), email: normalizado, password, primeraCompraUsada: false };
-        const usuario = sinPassword(cuenta);
-        set({ cuentas: [...get().cuentas, cuenta], usuario });
-        return usuario;
+      registrar: async (datos) => {
+        const { token, cliente } = await authApi.registrar(datos);
+        set({ token, cliente });
+        return cliente;
       },
 
-      ingresar: async ({ email, password }) => {
-        await simularLatencia();
-        const cuenta = get().cuentas.find((c) => c.email === email.trim().toLowerCase() && c.password === password);
-        if (!cuenta) throw new Error('El email o la contraseña no son correctos.');
-        const usuario = sinPassword(cuenta);
-        set({ usuario });
-        return usuario;
+      ingresar: async (datos) => {
+        const { token, cliente } = await authApi.ingresar(datos);
+        set({ token, cliente });
+        return cliente;
       },
 
-      salir: () => set({ usuario: null }),
-
-      registrarCompra: () => {
-        const { usuario, cuentas } = get();
-        if (!usuario) return;
-        set({
-          usuario: { ...usuario, primeraCompraUsada: true },
-          cuentas: cuentas.map((c) => (c.email === usuario.email ? { ...c, primeraCompraUsada: true } : c)),
-        });
+      refrescarPerfil: async () => {
+        const cliente = await authApi.perfil();
+        set({ cliente });
       },
+
+      salir: () => set({ token: null, cliente: null }),
     }),
-    { name: 'missl_sesion', storage: createJSONStorage(() => storageSeguro('local')) },
+    { name: 'missl_sesion_cliente', storage: createJSONStorage(() => storageSeguro('local')) },
   ),
 );

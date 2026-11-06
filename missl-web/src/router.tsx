@@ -1,7 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { About } from './pages/About';
-import { Admin } from './pages/Admin';
+import { Admin2fa } from './pages/admin/Admin2fa';
+import { AdminLogin } from './pages/admin/AdminLogin';
+import { AdminPanel } from './pages/admin/AdminPanel';
 import { Auth } from './pages/Auth';
 import { Cart } from './pages/Cart';
 import { Catalog } from './pages/Catalog';
@@ -10,6 +12,7 @@ import { Confirmation } from './pages/Confirmation';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { ProductDetail } from './pages/ProductDetail';
+import { AdminProtectedRoute } from './routes/AdminProtectedRoute';
 import { RequireAuth } from './routes/RequireAuth';
 
 export const router = createBrowserRouter([
@@ -24,16 +27,13 @@ export const router = createBrowserRouter([
       { path: 'producto/:id', element: <ProductDetail /> },
       { path: 'carrito', element: <Cart /> },
       { path: 'cuenta', element: <Auth /> },
-      {
-        path: 'checkout',
-        element: (
-          <RequireAuth>
-            <Checkout />
-          </RequireAuth>
-        ),
-      },
+      // Sin checkout invitado: comprar exige sesión de cliente.
+      { path: 'checkout', element: <RequireAuth><Checkout /></RequireAuth> },
       { path: 'confirmacion', element: <Confirmation /> },
-      { path: 'admin', element: <Admin /> },
+      // Administración: contraseña → 2FA → panel protegido por JWT de rol ADMIN.
+      { path: 'admin', element: <AdminLogin /> },
+      { path: 'admin/2fa', element: <Admin2fa /> },
+      { path: 'admin/panel', element: <AdminProtectedRoute><AdminPanel /></AdminProtectedRoute> },
       { path: 'nosotros', element: <About /> },
       { path: '*', element: <NotFound /> },
     ],
