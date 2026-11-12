@@ -1,4 +1,5 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, USAR_MOCK } from '../config';
+import { ErrorMock, mockRequest } from '../mocks/mockApi';
 import { useAdminAuthStore } from '../store/adminAuthStore';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
@@ -50,6 +51,16 @@ async function request<T>(path: string, { method = 'GET', body, sesion = 'ningun
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+
+  if (USAR_MOCK) {
+    try {
+      return (await mockRequest(method, path, body, token)) as T;
+    } catch (e) {
+      if (!(e instanceof ErrorMock)) throw e;
+      if (e.status === 401 && token) cerrarSesionVencida(sesion);
+      throw new ApiError(e.status, e.mensajes);
+    }
+  }
 
   let respuesta: Response;
   try {
