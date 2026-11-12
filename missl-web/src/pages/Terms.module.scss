@@ -1,0 +1,121 @@
+@use '../styles/breakpoints' as bp;
+
+.terms {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+  padding-bottom: 24px;
+}
+
+.indice {
+  position: sticky;
+  top: 96px;
+  border-top: 1px solid var(--fg);
+  padding-top: 18px;
+  font-size: 14px;
+
+  h2 {
+    font-family: var(--font-body);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--soft);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  ol {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: decimal inside;
+    color: var(--soft);
+  }
+
+  a {
+    color: var(--fg);
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.clausulas {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  max-width: 68ch;
+  counter-reset: clausula;
+
+  > li {
+    counter-increment: clausula;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--fg);
+    scroll-margin-top: 96px;
+
+    &::before {
+      content: counter(clausula) '. ';
+      color: var(--soft);
+    }
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+
+  strong {
+    color: var(--fg);
+  }
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.cierre {
+  grid-column: 2;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  font-size: 14px;
+  color: var(--muted);
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+@include bp.tablet {
+  .terms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .indice {
+    position: static;
+  }
+
+  .cierre {
+    grid-column: 1;
+  }
+}

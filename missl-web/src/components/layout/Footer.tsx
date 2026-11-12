@@ -69,7 +69,7 @@ export function Footer() {
       </section>
 
       <p className={styles.legal}>
-        <small>© 2026 MISSL</small>
+        <small>© 2026 MISSL · <Link to="/terminos">Términos y condiciones</Link></small>
         <small>Datos de ejemplo · Aplicaciones Interactivas</small>
       </p>
     </footer>

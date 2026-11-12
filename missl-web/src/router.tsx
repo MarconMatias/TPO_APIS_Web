@@ -12,6 +12,7 @@ import { Confirmation } from './pages/Confirmation';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { ProductDetail } from './pages/ProductDetail';
+import { Terms } from './pages/Terms';
 import { AdminProtectedRoute } from './routes/AdminProtectedRoute';
 import { RequireAuth } from './routes/RequireAuth';
 
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
       { path: 'admin/2fa', element: <Admin2fa /> },
       { path: 'admin/panel', element: <AdminProtectedRoute><AdminPanel /></AdminProtectedRoute> },
       { path: 'nosotros', element: <About /> },
+      { path: 'terminos', element: <Terms /> },
       { path: '*', element: <NotFound /> },
     ],
   },

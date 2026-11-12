@@ -117,7 +117,13 @@ export function Checkout() {
             <button type="submit" className="btn block" disabled={form.enviando} aria-busy={form.enviando}>
               {form.enviando ? 'Procesando pago…' : `Confirmar pago · ${formatPrecio(totales.total)}`}
             </button>
-            <p className="note">El importe final lo confirma el sistema al procesar el pago.</p>
+            <p className="note">
+              El importe final lo confirma el sistema al procesar el pago. Al confirmar aceptás los{' '}
+              <Link to="/terminos" target="_blank">
+                términos y condiciones<span className="sr-only"> (abre en otra pestaña)</span>
+              </Link>
+              .
+            </p>
           </form>
 
           <ResumenPedido lineas={lineas} totales={totales} cliente={cliente} conItems />
