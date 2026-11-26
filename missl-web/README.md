@@ -2,7 +2,7 @@
 
 Frontend de MISSL (e-commerce de zapatillas, indumentaria y carteras originales) en React. Es un repositorio independiente que consume **missl-api** (Spring Boot) por HTTP/REST.
 
-Stack: React 19 + TypeScript + Vite, React Router, Zustand y SCSS Modules.
+Stack: React 19 (JavaScript + JSX) + Vite, React Router, Zustand y SCSS Modules.
 
 ## Cómo correrlo
 
@@ -13,7 +13,7 @@ Stack: React 19 + TypeScript + Vite, React Router, Zustand y SCSS Modules.
 cp .env.example .env   # opcional: VITE_API_URL, por defecto http://localhost:8080/api
 npm install
 npm run dev            # http://localhost:4200
-npm run build          # chequeo de tipos + build de producción
+npm run build          # build de producción
 npm run lint
 ```
 
@@ -38,22 +38,25 @@ npm run lint
 | Panel de administración | `GET/POST/PUT/DELETE /admin/productos`, `GET /admin/productos/promociones`, `PATCH /admin/productos/{id}/promocion` | Admin |
 
 - **No hay compra como invitado:** para comprar hace falta una cuenta. El backend toma al cliente del JWT, no del body.
-- **Tipos:** `src/types/` replica los DTO de missl-api con los mismos nombres de campos.
-- **Errores:** todo pasa por `src/api/client.ts`. Las respuestas de error (`ApiError`: `status` + `mensajes`) se muestran en los formularios o en un estado de error con "Reintentar". Un 401 con token cierra la sesión vencida.
+- **Llamadas a la API:** cada componente llama a missl-api con `fetch()` usando la URL base de `src/config.js`.
+  - Las lecturas se hacen dentro de un `useEffect` con estados `useState` de datos, carga y error. Si fallan, se muestra un estado de error con "Reintentar".
+  - Los envíos de formularios se hacen en el `handleSubmit`. Si el backend responde con error (`ApiError`: `status` + `mensajes`), el formulario muestra esos mensajes.
+  - Las rutas con sesión envían `Authorization: Bearer <token>`. Un 401 con token cierra la sesión vencida.
+- **Formularios:** cada campo es un `useState`. Las reglas de validación están en `src/util/validacion.js`, y los errores se muestran después del primer intento de envío.
 - **Lo que queda en el navegador:** el carrito (solo id, talle y cantidad; precios y descuentos los da la API) y los tokens. La sesión de cliente se guarda en `localStorage` y la de admin en `sessionStorage`.
 
 ## Estructura
 
 ```
 src/
-  api/         client.ts (fetch + JWT + errores) y un módulo por recurso: productosApi, authApi, ventasApi, adminApi
-  types/       espejo de los DTO de missl-api
+  config.js    URL base de missl-api (VITE_API_URL) y mensajes de error comunes
   store/       Zustand: sesión de cliente, sesión de admin (2FA), carrito, último pedido, avisos
-  hooks/       useApi (carga/error/reintentar), useCarrito, useForm (validación accesible), useDocumentTitle
+  hooks/       useDocumentTitle
   routes/      RequireAuth (checkout) y AdminProtectedRoute (panel)
-  pages/       una vista por ruta; pages/admin con login, 2FA y panel
-  components/  layout, ui, product, cart, admin
+  pages/       una vista por ruta (acá viven los useEffect + fetch); pages/admin con login, 2FA y panel
+  components/  layout, ui, product, cart, admin (los diálogos del admin hacen su propio fetch)
   constants/   etiquetas de categorías y medios de pago, guía de talles (contenido fijo, no datos)
+  util/        validaciones, precios y totales del carrito, formato de cuenta regresiva
   styles/      tokens, reset y primitivas globales
 ```
 
